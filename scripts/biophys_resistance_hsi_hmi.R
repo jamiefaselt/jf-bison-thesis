@@ -11,54 +11,47 @@ library(maptools)
 library(spatialEco)
 library(climateStability)
 
-r <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/JF_Data/temp_rstr.tif")
+#template raster
+r <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/template_raster.tif")
 
-#bring in HSI
-hsi <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/JF_Data/SUMMER_HSI_clip.tif")
-plot(hsi)
-hsi # this says the max value is 73
-hist(hsi) # the histogram still shows a bunch of 128
-hsi.crop <- crop(hsi, r) 
-hsi.crop # this shows the max value now at 128
-hsi.agg <- aggregate(hsi.crop, fact=18) # this changes the min. value to 8.29...
-hsi.agg
-hsi.agg[hsi.agg>73.00000001] <- NA # I know the max should only be 73
-hsi.agg # this gives me seemingly correct max but different min from the intitial raster
+# resample the hsi layer to match the extent and resolution of template raster
+hsi <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/SUMMER_HSI_clip.tif")
+hsi.resample <- resample(hsi, r)
+plot(hsi.resample)
+#write this for future use so I won't have to resample again!
+writeRaster(hsi.resample, "data/processed/hsi_resample_wrongmax.tif")
+
+# according to Brent (creater of hsi layer) the max value should be 73 NOT 128
+# fix the max value here
+hsi.resample[hsi.resample>73] <- NA
+hsi.resample
+#writeRaster(hsi.resample, "data/processed/hsi_resample.tif")
+#writeRaster(hsi.resample, "/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/processed/hsi_resample.tif")
 
 # take the inverse of habitat suitability for resistance
-hsi.inverse <- 1/hsi.agg
+hsi.resample <- raster("data/processed/hsi_resample.tif")
+hsi.inverse <- 1/hsi.resample
 plot(hsi.inverse)
-r1 <- hsi.inverse
-rescaled.raster <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
-plot(rescaled.raster)
-diff <- rescaled.raster-hsi.rescale
-plot(diff)
-diff
-hsi.rescale <- rescale0to1(hsi.inverse)
-plot(hsi.rescale)
+
+# rescale to 0-1 for standardization
+hsi.rescale <- rescale01(hsi.inverse)
 hsi.rescale
 
 # bring in the human modification layer
-hmi <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/JF_Data/hmi.crop.tif")
-hist(hmi)
-plot(hmi)
-hmi
+hmi <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/hmi.crop.tif")
 
 # fuzzy sum approach to combine them from Theobald 2013
+biophys_fuzsum <- fuzzysum(hsi.rescale, hmi)
+plot(biophys_fuzsum)
+biophys_fuzsum
+
+#this does the same thing as the function above...
 rc1.1m <- 1-hsi.rescale
 rc2.1m <- 1-hmi
 fuz.sum <- 1-(rc1.1m*rc2.1m)
-plot(fuz.sum) # the result is a bunch of zeros / NA data where I think there should be higher resistance (roads, cropland and crossing private property). 
+plot(fuz.sum) 
 fuz.sum
 
-rc1.1m <- 1-hsi.01
-rc2.1m <- 1-hmi
-fuz.sum2 <- 1-(rc1.1m*rc2.1m)
-plot(fuz.sum2) # the result is a bunch of zeros / NA data where I think there should be higher resistance (roads, cropland and crossing private property). 
-fuz.sum2
-
-#write raster
-writeRaster(fuz.sum, "Resistance_Layers/biophys_resistance.tif", overwrite=TRUE)
-biophys <- raster("Resistance_Layers/biophys_resistance.tif")
-plot(biophys)
-biophys
+#write raster (saving both gdrive and local computer)
+writeRaster(fuz.sum, "/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/processed/biophys_resistance.tif")
+writeRaster(fuz.sum, "data/processed/biophys_resistance.tif")
