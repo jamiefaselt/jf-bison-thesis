@@ -33,6 +33,7 @@ counties$County.ANSI <- as.numeric(counties$County.ANSI)
 #plot(counties) #checking and this doesn't have weird gaps yet
 cattle_sales$Value <- gsub(",","",cattle_sales$Value)
 cattle_sales$Value <- as.numeric(cattle_sales$Value)
+cattle_sales[is.na(cattle_sales)]=0
 
 # join
 cattlesales.spatial <- left_join(counties, cattle_sales)
@@ -40,7 +41,6 @@ cattlesales.spatial <- left_join(counties, cattle_sales)
 # double check projection
 st_crs(counties) == st_crs(cattlesales.spatial) #true
 st_is_valid(cattlesales.spatial) #true
-plot(cattlesales.spatial)
 #subset to relevant variables
 cattle.sales.sub <- cattlesales.spatial %>% 
   dplyr::select(geometry,Value,County.ANSI,State.ANSI)

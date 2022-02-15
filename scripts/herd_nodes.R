@@ -13,7 +13,7 @@ library(dplyr)
 r <- raster("data/template_raster.tif")
 
 #bring in the data, match projection and make valid 
-mt_reservations <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/mt_reservations/MontanaReservations.shp") %>% 
+mt_reservations <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/jf-bison-thesis/original/mt_reservations/MontanaReservations.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid()
 
@@ -56,4 +56,3 @@ st_write(all.nodes, "data/processed/all_nodes_correct.shp", overwite = TRUE)
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
 writeRaster(node.rast, "data/processed/all_nodes.tif", overwrite = TRUE)
-writeRaster(node.rast, "/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/processed/all_nodes.tif")
