@@ -10,16 +10,14 @@ library(tidyverse)
 library(tigris)
 library(dplyr)
 
-r <- raster("Data/temp_rstr.tif")
-hsi <- raster("Data/hsi_crop_540.tif")
-st_crs(hsi)==st_crs(r)
+r <- raster("data/template_raster.tif")
 
 #bring in the data, match projection and make valid 
-mt_reservations <- st_read("/Users/jamiefaselt/Research/Data/MontanaReservations_shp 3/MontanaReservations.shp") %>% 
+mt_reservations <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/mt_reservations/MontanaReservations.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid()
 
-mt_fws <- st_read("/Users/jamiefaselt/Research/Data//MT Data/MT_FWS.shp") %>% 
+mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp") %>% 
   st_transform(.,st_crs(r))
 
 mt_CMR <- mt_fws %>% 
@@ -29,7 +27,7 @@ mt_CMR <- mt_fws %>%
   st_make_valid()
 plot(mt_CMR)
 
-mt_NPS <- st_read("/Users/jamiefaselt/Research/Data/NationalParkServiceAdminBoundaries_shp 2") %>% 
+mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid()
 
@@ -54,7 +52,8 @@ plot(all.nodes)
 all.nodes$ID <- seq(1, nrow(all.nodes))
 all.nodes <- all.nodes %>% st_buffer(., 10000) # buffer of 10 km         
 plot(all.nodes)
-st_write(all.nodes, "Data/all_nodes_correct.shp", overwite = TRUE)
+st_write(all.nodes, "data/processed/all_nodes_correct.shp", overwite = TRUE)
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
-writeRaster(node.rast, "Data/node.rast.tif", overwrite = TRUE)
+writeRaster(node.rast, "data/processed/all_nodes.tif", overwrite = TRUE)
+writeRaster(node.rast, "/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/processed/all_nodes.tif")
