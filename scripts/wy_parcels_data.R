@@ -11,7 +11,7 @@ library(dplyr)
 library(rgdal)
 
 # bring in hsi and temp raster
-r <- raster("/Users/jamiefaselt/jf_resist/Data/temp_rstr.tif")
+r <- raster("data/template_raster.tif")
 #bring in counties
 counties <- tigris::counties()
 # make columns match to caddat
@@ -71,7 +71,7 @@ head(wy.parcl.dens)
 wy.parcl.dens <- st_as_sf(wy.parcl.dens)  
 wy.parcl.dens.rast<-fasterize::fasterize(wy.parcl.dens, r, field = 'parceldensity')
 plot(wy.parcl.dens.rast)
-#writeRaster(wy.parcl.rast, "Raster_Layers/wy.parcel.density.tif")
+writeRaster(wy.parcl.dens.rast, "data/processed/wy_parcel_density.tif")
 
 ##### Size Ratio #####
 colnames(wy.parcels)
@@ -90,18 +90,15 @@ wy.parcl.jn.stats <- wy.parcels.area%>%
             minratio = min(parcelratio),
             sdratio = sd(parcelratio))
 wy.parcl.jn.stats <- left_join(cty, wy.parcl.jn.stats)
-wy.parcl.stats <- st_as_sf(parcl.jn.stats)
+wy.parcl.stats <- st_as_sf(wy.parcl.jn.stats)
 
-parcl.max.rast<-fasterize::fasterize(parcl.stats, r, field = 'maxratio')
+parcl.max.rast<-fasterize::fasterize(wy.parcl.stats, r, field = 'maxratio')
 plot(log(parcl.max.rast))
-parcl.med.rast<-fasterize::fasterize(parcl.stats, r, field = 'medratio')
+parcl.med.rast<-fasterize::fasterize(wy.parcl.stats, r, field = 'medratio')
 plot(log(parcl.med.rast))
-parcl.min.rast<-fasterize::fasterize(parcl.stats, r, field = 'minratio')
+parcl.min.rast<-fasterize::fasterize(wy.parcl.stats, r, field = 'minratio')
 plot(log(parcl.min.rast))
-parcl.sd.rast<-fasterize::fasterize(parcl.stats, r, field = 'sdratio')
+parcl.sd.rast<-fasterize::fasterize(wy.parcl.stats, r, field = 'sdratio')
 plot(log(parcl.sd.rast))
 
 
-writeRaster(parcl.max.rast, "Raster_Layers/singlestate/wy.parcel.maxratio.tif")
-writeRaster(parcl.med.rast, "Raster_Layers/singlestate/wy.parcel.medratio.tif")
-writeRaster(parcl.sd.rast, "Raster_Layers/singlestate/wy.parcel.sdratio.tif")
