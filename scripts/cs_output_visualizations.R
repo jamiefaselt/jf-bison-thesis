@@ -10,6 +10,14 @@ library(rasterVis)
 library(cowplot)
 library(ggplot2)
 library(viridis)
+
+r <- raster("data/template_raster.tif")
+states <- tigris::states()
+mt <- states %>% filter(., NAME=="Montana", drop=TRUE)
+counties <- tigris::counties()
+mt.counties<-counties %>% filter(STATEFP %in%  c("30"))
+mt.counties<-st_transform(mt.counties,st_crs(r))
+
 ##### biophys CS #####
 biophys_layer <- raster("data/raster_layers/biophys_resistance_layer.tif")
 biophys.cs <- raster("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc")
@@ -21,7 +29,8 @@ quantile(biophys.cs)
 levelplot(log(biophys.cs))
 levelplot(biophys.cs)
 plot(biophys.cs, breaks = c(0, 0.01596094, 0.04852184, .06))
-image(biophys.cs, col=magma(256), zlim=c(0,.08), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(biophys.cs, col=magma(256), zlim=c(0,.09), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(st_geometry(mt.counties), add = TRUE)
 
 ##### social composite CS #####
 social_layer <- raster("data/raster_layers/social_composite_layer.tif")
@@ -30,8 +39,8 @@ plot(social.cs)
 plot(log(social.cs))
 levelplot(log(social.cs))
 quantile(social.cs)
-image(social.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
-
+plot(social.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(st_geometry(mt.counties), add = TRUE)
 
 ##### tribal scenario CS #####
 tribal_layer <- raster("data/raster_layers/tribal_scenario.tif")
@@ -39,4 +48,7 @@ tribal.cs <- raster("data/circuitscape_outputs/tribal_scenario/tribal_scenario_o
 plot(tribal.cs)
 plot(log(tribal.cs))
 quantile(tribal.cs)
-image(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE, legend=TRUE)
+plot(st_geometry(mt.counties), add = TRUE)
+
+rasterImage(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALS)

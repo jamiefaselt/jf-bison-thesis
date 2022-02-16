@@ -3,13 +3,12 @@ library(raster)
 library(terra)
 library(dplyr)
 library(sf)
-library(spatialEco)
 library(ggmap)
 library(rgdal)
 library(maptools)
-library(spatialEco)
-library(climateStability)
-r <- raster("data/template_rstr.tif")
+
+
+r <- raster("data/template_raster.tif")
 states <- tigris::states()
 mt <- states %>% filter(., NAME=="Montana", drop=TRUE)
 counties <- tigris::counties()
@@ -20,10 +19,6 @@ biophys <- raster("data/raster_layers/biophys_resistance.tif")
 plot(biophys)
 plot(st_geometry(mt.counties), add = T)
 biophys
-biophys.CS <- raster("circuit_outputs/biophysical_/biophysical_cum_curmap.asc")
-biophys.CS
-plot(log(biophys.CS))
-plot(biophys.CS)
 ###################################################################
 bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") 
 plot(bis.dec)
