@@ -29,4 +29,6 @@ plot(econ.scenario.survey)
 poverty <- raster("data/raster_layers/poverty_layer.tif")
 econ.scenario <- social.composite-econ.incentive-poverty
 plot(econ.scenario)
-writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif")
+econ.rescale <- rescale01(econ.scenario)
+econ.rescale[econ.rescale==0] <- 0.0001 
+writeRaster(econ.rescale, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
