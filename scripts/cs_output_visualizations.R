@@ -29,7 +29,7 @@ quantile(biophys.cs)
 levelplot(log(biophys.cs))
 levelplot(biophys.cs)
 plot(biophys.cs, breaks = c(0, 0.01596094, 0.04852184, .06))
-plot(biophys.cs, col=magma(256), zlim=c(0,.09), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(biophys.cs, col=plasma(256), zlim=c(0,.1), axes = TRUE, main = "Biophysical Baseline")
 plot(st_geometry(mt.counties), add = TRUE)
 
 ##### social composite CS #####
@@ -39,7 +39,7 @@ plot(social.cs)
 plot(log(social.cs))
 levelplot(log(social.cs))
 quantile(social.cs)
-plot(social.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE)
+plot(social.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main = "Social Composite Circuitscape Output")
 plot(st_geometry(mt.counties), add = TRUE)
 
 ##### tribal scenario CS #####
@@ -48,7 +48,20 @@ tribal.cs <- raster("data/circuitscape_outputs/tribal_scenario/tribal_scenario_o
 plot(tribal.cs)
 plot(log(tribal.cs))
 quantile(tribal.cs)
-plot(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALSE, legend=TRUE)
+plot(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main = "Tribal Governance Scenario")
 plot(st_geometry(mt.counties), add = TRUE)
 
 rasterImage(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALS)
+
+
+###### econ scenario cs ######
+econ.cs <- raster("data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc")
+quantile(econ.cs)
+plot(econ.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main="Economic Incentive Scenario")
+plot(st_geometry(mt.counties), add = TRUE)
+
+#### biophys with na edit cs ####
+biophys.edit.cs <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc")
+quantile(biophys.edit.cs)
+plot(biophys.edit.cs, col=plasma(256), zlim=c(0,.1), axes = TRUE, main="Biophys NA Edit")
+plot(st_geometry(mt.counties), add = TRUE)
