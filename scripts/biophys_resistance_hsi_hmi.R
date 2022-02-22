@@ -37,6 +37,7 @@ plot(hsi.inverse)
 
 # rescale to 0-1 for standardization
 hsi.rescale <- rescale01(hsi.inverse)
+hsi.rescale[is.na(hsi.rescale)]=1
 hsi.rescale
 plot(hsi.rescale)
 
@@ -56,7 +57,7 @@ plot(fuz.sum)
 fuz.sum
 
 #write raster (saving both gdrive and local computer)
-writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_nas_edited.tif")
+writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_nas_edited.tif", overwrite = TRUE)
 
 # added this to line 38 to make the edited version:
 hsi.rescale[is.na(hsi.rescale)]=1
