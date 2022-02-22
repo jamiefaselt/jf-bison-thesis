@@ -24,7 +24,6 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 
 
 # Download WY Padus -------------------------------------------------------
-
 folder_url <- "https://drive.google.com/drive/folders/1zxMAZvWxL_1_kMB6oyuo6ZHlQOicQuJl" #PADUS by state
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
