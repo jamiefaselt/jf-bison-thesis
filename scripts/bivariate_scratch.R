@@ -1,5 +1,10 @@
-# Custom map theme --------------------------------------------------------
+library(raster)
+library(tidyverse)
 
+# template raster
+r <- raster("data/template_raster.tif")
+
+# Custom map theme --------------------------------------------------------
 theme_map <- function(...) {
   theme_minimal() +
     theme(
@@ -23,10 +28,10 @@ theme_map <- function(...) {
 # Load Elev data and calc hillshade --------------------------------------- 
 #not necessary, purely aesthetic
 elev <- getData('alt', country = 'USA')
-elev.proj <- projectRaster(elev[[1]], dist.stack)
+elev.proj <- projectRaster(elev[[1]], r)
 
 
-elev.crop <- crop(elev.proj, dist.stack)
+elev.crop <- crop(elev.proj, r)
 elev.mod <- elev.crop *10
 slope <- terrain(elev.mod, opt='slope')
 aspect <- terrain(elev.mod, opt='aspect')
@@ -36,31 +41,56 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 
 
 # Get vectors for maps ----------------------------------------------------
+mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
+  st_transform(.,st_crs(r)) %>% 
+  st_make_valid() %>% 
+  filter(., !grepl("ROCKY BOY'S",  NAME))
+mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp") %>% 
+  st_transform(.,st_crs(r))
+mt_CMR <- mt_fws %>% 
+  filter(., ORGNAME=="CHARLES M. RUSSELL NATIONAL WILDLIFE REFUGE",  drop=TRUE) %>% 
+  st_transform(.,st_crs(r)) %>% 
+  filter(., SUM_GISACR > 530517) %>% 
+  st_make_valid()
+mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp") %>% 
+  st_transform(.,st_crs(r)) %>% 
+  st_make_valid()
+yellowstone <- mt_NPS %>% 
+  filter(., grepl('Yellowstone National Park',  UNIT_NAME))
 
-PAs <- st_read(here::here("Data/ProcessedData/studyPAs.shp")) %>% 
-  dplyr::filter(. , Unit_Nm == "Yellowstone National Park" | Unit_Nm == "Weminuche Wilderness") %>% 
-  st_transform(. , crs = crs(dist.stack))
+rez <- subset(mt_reservations, select=c(geometry, NAME))
+cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>% 
+  rename(NAME = ORGNAME)
+yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
+  rename(NAME = UNIT_NAME)
+
+PAs <- bind_rows(rez, cmr, yellowstone)
+plot(PAs)
 
 sts <- tigris::states() %>% 
-  dplyr::filter(., STUSPS %in% c("ID", "MT", "UT", "WY", "CO", "AZ", "NM")) %>% 
-  st_transform(., crs(dist.stack)) %>% 
+  dplyr::filter(., STUSPS %in% c("MT", "WY")) %>% 
+  st_transform(., crs(r)) %>% 
   as(., "Spatial")
 
 conus <-  tigris::states() %>%
   dplyr::filter(,, !STUSPS %in% c("AK","AS", "HI", "GU", "VI", "DC", "PR", "MP")) %>% 
-  st_transform(., crs(dist.stack))
+  st_transform(., crs(r))
 
-sts.crop <- crop(sts, dist.stack)
+sts.crop <- crop(sts, r)
 
-pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
-pa.cents$lab <- c("Weminche \n Wilderness Area", "Yellowstone \n National Park")
+pa.cents <- st_read("data/processed/all_nodes_correct.shp") %>% 
+  as(., "sf") %>% 
+  filter(., !grepl("ROCKY BOY'S",  NAME))
+
+#pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
+pa.cents$lab <- c("reservations, cmr, yellowstone")
 
 # Plot Circuitscape results with lcps-----------------------------------------------
 library(purrr)
 library(dplyr)
 
 b_df <- biophys.cs %>%
-  projectRaster(., res=300, crs = crs(dist.stack)) %>%
+  projectRaster(., res=300, crs = crs(r)) %>%
   rasterToPoints %>%
   as.data.frame() %>%
   `colnames<-`(c("x", "y", "biophys"))
@@ -103,7 +133,7 @@ p.cs <- RStoolbox::ggR(hills3) +
 
 inset <- ggplot()+
   geom_sf(data=conus, fill="white") +
-  geom_sf(data =st_as_sfc(st_bbox(dist.stack)), fill=NA, color="red") +
+  geom_sf(data =st_as_sfc(st_bbox(r)), fill=NA, color="red") +
   theme_map() +
   theme(panel.background = element_rect(fill = "gray", color = "black"),
         plot.background = element_rect(fill = NA, color = NA))  
@@ -113,14 +143,19 @@ inset <- ggplot()+
 #normalize (i.e. 0,1) your CS outputs first
 
 # convert gridded raster dato dataframe
+biophys.norm <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc") %>% 
+  rescale01(.)
+
 b_df <- biophys.norm %>%
-  projectRaster(., res=300, crs = crs(dist.stack)) %>%
+  projectRaster(., res=300, crs = crs(r)) %>%
   rasterToPoints %>%
   as.data.frame() %>%
   `colnames<-`(c("x", "y", "biophys"))
 
+implement.norm <- raster("data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc") %>% 
+  rescale01(.)
 s_df <- implement.norm %>%
-  projectRaster(., res=300, crs = crs(dist.stack)) %>%
+  projectRaster(., res=300, crs = crs(r)) %>%
   rasterToPoints %>%
   as.data.frame() %>%
   `colnames<-`(c("x", "y", "implement"))
@@ -157,7 +192,7 @@ colmat<-function(nquantiles=10, upperleft=rgb(0,150,235, maxColorValue=255), upp
   seqs[1]<-1
   col.matrix<-col.matrix[c(seqs), c(seqs)]}
 
-
+library(classInt)
 col.matrix<-colmat(nquantiles=9)
 
 
@@ -213,9 +248,8 @@ p1 <- RStoolbox::ggR(hills3) +
     interpolate = TRUE
   ) +
   scale_fill_identity() +
-  geom_sf(data = PAs, fill = "forestgreen") +
+  geom_sf(data = pa.cents, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
   theme_map() +
   theme(legend.position = 'none',
         plot.subtitle = element_text(
@@ -257,14 +291,16 @@ p2 <- legend_5 %>%
 
 p3 <- ggplot()+
   geom_sf(data=conus, fill="white") +
-  geom_sf(data =st_as_sfc(st_bbox(dist.stack)), fill=NA, color="red") +
+  geom_sf(data =st_as_sfc(st_bbox(r)), fill=NA, color="red") +
   theme_map() +
   theme(panel.background = element_rect(fill = "gray", color = "black"),
         plot.background = element_rect(fill = NA, color = NA))
 
 # create final layout
+#library(cowplot)
 p <- ggdraw(p1)  +
   draw_plot(p2, x = 0.74, y = 0.73, 
             width = 0.26, height = 0.26) +
   draw_plot(p3, x = 0.72, y = 0,  
             width = 0.3, height = 0.2)
+p
