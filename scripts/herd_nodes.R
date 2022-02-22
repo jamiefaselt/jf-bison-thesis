@@ -39,21 +39,12 @@ cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>%
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
-PAs <- bind_rows(rez, cmr, yellowstone)
-plot(PAs)
-
 # take the centroids
 rez.nodes <- st_centroid(rez)
 cmr.nodes <- st_centroid(cmr)
 nps.nodes <- st_centroid(yellowstone)
 
 #combine centroids into one shapefile
-reznode <- subset(rez.nodes, select=c(geometry, NAME))
-cmrnode <- subset(cmr.nodes, select=c(geometry, ORGNAME)) %>% 
-  rename(NAME = ORGNAME)
-npsnode <- subset(nps.nodes, select=c(geometry, UNIT_NAME)) %>%
-  rename(NAME = UNIT_NAME)
-
 all.nodes <- bind_rows(rez.nodes, cmr.nodes, nps.nodes)
 plot(all.nodes)
 
