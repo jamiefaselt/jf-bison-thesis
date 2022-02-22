@@ -13,13 +13,12 @@ library(dplyr)
 r <- raster("data/template_raster.tif")
 
 #bring in the data, match projection and make valid 
-mt_reservations <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/jf-bison-thesis/original/mt_reservations/MontanaReservations.shp") %>% 
+mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid()
 
 mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp") %>% 
   st_transform(.,st_crs(r))
-
 mt_CMR <- mt_fws %>% 
   filter(., ORGNAME=="CHARLES M. RUSSELL NATIONAL WILDLIFE REFUGE",  drop=TRUE) %>% 
   st_transform(.,st_crs(r)) %>% 
@@ -34,9 +33,18 @@ mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundari
 yellowstone <- mt_NPS %>% 
   filter(., grepl('Yellowstone National Park',  UNIT_NAME))
 
+rez <- subset(mt_reservations, select=c(geometry, NAME))
+cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>% 
+  rename(NAME = ORGNAME)
+yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
+  rename(NAME = UNIT_NAME)
+
+PAs <- bind_rows(rez, cmr, yellowstone)
+plot(PAs)
+
 # take the centroids
-rez.nodes <- st_centroid(mt_reservations)
-cmr.nodes <- st_centroid(mt_CMR)
+rez.nodes <- st_centroid(rez)
+cmr.nodes <- st_centroid(cmr)
 nps.nodes <- st_centroid(yellowstone)
 
 #combine centroids into one shapefile
@@ -46,7 +54,7 @@ cmrnode <- subset(cmr.nodes, select=c(geometry, ORGNAME)) %>%
 npsnode <- subset(nps.nodes, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
-all.nodes <- bind_rows(reznode, cmrnode, npsnode)
+all.nodes <- bind_rows(rez.nodes, cmr.nodes, nps.nodes)
 plot(all.nodes)
 
 all.nodes$ID <- seq(1, nrow(all.nodes))
