@@ -17,15 +17,15 @@ states <- tigris::states()
 mt <- states %>% filter(., NAME=="Montana", drop=TRUE)
 
 #bring in hsi layer from Brent to set crs
-hsi <- raster("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/SUMMER_HSI_clip.tif")
+hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi
 
 # load the herd locations
-mt_reservations <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/mt_reservations/MontanaReservations.shp")
-mt_fws <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/mt_fws/MT_FWS.shp")
+mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp")
+mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp")
 mt_CMR <- mt_fws %>% 
   filter(., ORGNAME=="CHARLES M. RUSSELL NATIONAL WILDLIFE REFUGE",  drop=TRUE)
-mt_NPS <- st_read("/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp")
+mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp")
 yellowstone <- mt_NPS %>% 
   filter(., UNIT_NAME=="Yellowstone National Park",  drop=TRUE)
 
@@ -57,6 +57,5 @@ extent(r)
 extent(st_bbox(all.nodes))
 
 # save the template raster
-writeRaster(r, "/Users/jamiefaselt/Google Drive/My Drive/SpaSES Lab/Shared Data Sets/Faselt_bisonMT/template_raster.tif")
-writeRaster(r, "data/template_raster.tif")
+writeRaster(r, "data/template_raster.tif", overwrite = TRUE)
 
