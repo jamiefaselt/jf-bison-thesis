@@ -76,4 +76,17 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/mt_fws/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
+# Download Montana Reservation Data ------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1lpinf7nttBux4Zz2h2VM6C-J7POrCdvr" # Reservation Shapefiles
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/mt_reservations/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
+# Download Metadata for Montana Private Conservation Lands Data ------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1-2qhFff5eDlY7sOyhcRC9xK_LDPBiqoD" # Metadata for Montana Private Conservation Lands
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/LandMan_PrvtCons/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
