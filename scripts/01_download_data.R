@@ -6,9 +6,7 @@ options(
 
 
 # Download Wyoming Parcel Data --------------------------------------------
-
-
-folder_url <- "https://drive.google.com/drive/folders/1j4paghd9NM2wmXo8BSSr_LrTPVrXbWWm" #link to folder not the sharing link
+folder_url <- "https://drive.google.com/drive/folders/1j4paghd9NM2wmXo8BSSr_LrTPVrXbWWm" # wyoming parcels from the states gis site
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 #have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
@@ -17,7 +15,7 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 
 
 # Download HSI ------------------------------------------------------------
-folder_url <- "https://drive.google.com/drive/folders/15JnhlU5WDH26fir0vXCoLdCXyWmeOJms" #link to folder not the sharing link
+folder_url <- "https://drive.google.com/drive/folders/15JnhlU5WDH26fir0vXCoLdCXyWmeOJms" # Brent sent to me clipped
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 #have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
@@ -27,10 +25,55 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
 
 # Download WY Padus -------------------------------------------------------
 
-folder_url <- "https://drive.google.com/drive/folders/1zxMAZvWxL_1_kMB6oyuo6ZHlQOicQuJl" #describe where you downloaded
+folder_url <- "https://drive.google.com/drive/folders/1zxMAZvWxL_1_kMB6oyuo6ZHlQOicQuJl" #PADUS by state
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 #have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/PADUS2_1_StateWY_Shapefile/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+# Download MT Padus -------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1sMMT4w3xu-89iDsIAbhhoyHF8NtTdt-R" #PADUS by state
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/PADUS2_1_StateMT_Shapefile/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+# Download nps_boundaries -------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1UqhtCHGwPg_hA6N_CRa39Sey3GsAJ1Nl" # boundaries for mt nps units
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/nps_boundaries/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+# Download NASS Data ------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1zSSfIQP014m4VBQGr61wlBflYen_KN8V" # NASS data
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/NASS_data/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+# Download Montana Cadastral Data ------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1eS5oLPjdjak6cag1BixNknOx5Th96JK0" # Parcel data
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/Montana_Cadastral/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+# Download Montana FWS Data ------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1K2ej0zCsIcrIJPCz8mXHg7kEew7P6MyI" # Parcel data
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/mt_fws/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
 
