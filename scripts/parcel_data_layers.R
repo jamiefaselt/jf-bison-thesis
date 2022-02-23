@@ -67,7 +67,7 @@ plot(mt.pd)
 ###############################################################################
 
 # wyoming parcel data
-wy.parcl.rast <- raster("/Users/jamiefaselt/jf_resist/Raster_Layers/singlestate/wy.parcel.density.tif")
+wy.parcl.rast <- raster("data/processed/wy_parcel_density.tif")
 plot(wy.parcl.rast)
 wy.pd <- rescale01(wy.parcl.rast)
 mtwy.pd <- merge(mt.pd, wy.pd)
