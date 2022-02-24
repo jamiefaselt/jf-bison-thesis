@@ -1,6 +1,6 @@
 library(raster)
 library(tidyverse)
-
+library(sf)
 # template raster
 r <- raster("data/template_raster.tif")
 
@@ -88,6 +88,7 @@ pa.cents$lab <- c("reservations, cmr, yellowstone")
 # Plot Circuitscape results with lcps-----------------------------------------------
 library(purrr)
 library(dplyr)
+biophys.cs <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc")
 
 b_df <- biophys.cs %>%
   projectRaster(., res=300, crs = crs(r)) %>%
@@ -297,7 +298,7 @@ p3 <- ggplot()+
         plot.background = element_rect(fill = NA, color = NA))
 
 # create final layout
-#library(cowplot)
+library(cowplot)
 p <- ggdraw(p1)  +
   draw_plot(p2, x = 0.74, y = 0.73, 
             width = 0.26, height = 0.26) +
