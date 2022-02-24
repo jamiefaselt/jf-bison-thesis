@@ -47,7 +47,8 @@ biophys_fuzsum <- fuzzysum(hsi.rescale, hmi)
 plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 plot(st_geometry(mt.counties), add = TRUE)
 
-biophys_fuzsum
+biophys_resistance <- (1+biophys_fuzsum)^10
+plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 
 #this does the same thing as the function above...
 rc1.1m <- 1-hsi.rescale
@@ -57,5 +58,4 @@ plot(fuz.sum)
 fuz.sum
 
 #write raster (saving both gdrive and local computer)
-writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_nas_edited.tif", overwrite = TRUE)
-
+writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
