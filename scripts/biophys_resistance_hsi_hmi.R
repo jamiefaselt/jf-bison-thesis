@@ -34,14 +34,19 @@ plot(hsi.inverse)
 hsi.rescale <- rescale01(hsi.inverse)
 hsi.rescale[is.na(hsi.rescale)]=1
 hsi.rescale
-plot(hsi.rescale)
+plot(hsi.rescale, col=plasma(256), axes = TRUE, main = "Habitat Suitability Resistance Layer")
+plot(st_geometry(mt.counties), add = TRUE)
 
 # bring in the human modification layer
 hmi <- raster("data/processed/hmi.crop.tif")
-plot(hmi)
+plot(hmi, col=plasma(256), axes = TRUE, main = "Human Modification Layer")
+plot(st_geometry(mt.counties), add = TRUE)
+
 # fuzzy sum approach to combine them from Theobald 2013
 biophys_fuzsum <- fuzzysum(hsi.rescale, hmi)
-plot(biophys_fuzsum)
+plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
+plot(st_geometry(mt.counties), add = TRUE)
+
 biophys_fuzsum
 
 #this does the same thing as the function above...

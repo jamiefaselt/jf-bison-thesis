@@ -18,10 +18,11 @@ counties <- tigris::counties()
 mt.counties<-counties %>% filter(STATEFP %in%  c("30"))
 mt.counties<-st_transform(mt.counties,st_crs(r))
 
-##### biophys CS #####
-biophys_layer <- raster("data/raster_layers/biophys_resistance_layer.tif")
-biophys.cs <- raster("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc")
+##### biophys CS nas edited#####
+biophys_layer <- raster("data/raster_layers/biophys_resistance_nas_edited.tif")
+biophys.cs <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc")
 biophys.cs
+plot(biophys_layer)
 plot(log(biophys.cs))
 plot(biophys.cs)
 quantile(biophys.cs)
@@ -32,6 +33,11 @@ plot(biophys.cs, breaks = c(0, 0.01596094, 0.04852184, .06))
 plot(biophys.cs, col=plasma(256), zlim=c(0,.1), axes = TRUE, main = "Biophysical Baseline")
 plot(st_geometry(mt.counties), add = TRUE)
 
+##### biophys CS NAs included
+biophys.nas <- raster("data/raster_layers/biophys_resistance_layer.tif")
+plot(biophys.nas)
+biophys.nas.cs <- raster("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc")
+plot(biophys.nas.cs, col=plasma(256), zlim=c(0,.1), axes = TRUE, main = "Biophysical Baseline")
 ##### social composite CS #####
 social_layer <- raster("data/raster_layers/social_composite_layer.tif")
 social.cs <- raster("data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc")
@@ -39,7 +45,7 @@ plot(social.cs)
 plot(log(social.cs))
 levelplot(log(social.cs))
 quantile(social.cs)
-plot(social.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main = "Social Composite Circuitscape Output")
+plot(social.cs, col=plasma(256), zlim=c(0,.09), axes = TRUE, main = "Social Composite Circuitscape Output")
 plot(st_geometry(mt.counties), add = TRUE)
 
 ##### tribal scenario CS #####
