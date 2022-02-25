@@ -43,8 +43,7 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 # Get vectors for maps ----------------------------------------------------
 mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
-  st_make_valid() %>% 
-  filter(., !grepl("ROCKY BOY'S",  NAME))
+  st_make_valid()
 mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp") %>% 
   st_transform(.,st_crs(r))
 mt_CMR <- mt_fws %>% 
@@ -79,8 +78,7 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, r)
 
 pa.cents <- st_read("data/processed/all_nodes_correct.shp") %>% 
-  as(., "sf") %>% 
-  filter(., !grepl("ROCKY BOY'S",  NAME))
+  as(., "sf") 
 
 #pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
 pa.cents$lab <- c("reservations, cmr, yellowstone")
@@ -144,7 +142,7 @@ inset <- ggplot()+
 #normalize (i.e. 0,1) your CS outputs first
 
 # convert gridded raster dato dataframe
-biophys.norm <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc") %>% 
+biophys.norm <- raster("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc") %>% 
   rescale01(.)
 
 b_df <- biophys.norm %>%
@@ -301,7 +299,8 @@ p3 <- ggplot()+
 library(cowplot)
 p <- ggdraw(p1)  +
   draw_plot(p2, x = 0.74, y = 0.73, 
-            width = 0.26, height = 0.26) +
-  draw_plot(p3, x = 0.72, y = 0,  
-            width = 0.3, height = 0.2)
+            width = 0.26, height = 0.26) #+
+#  draw_plot(p3, x = 0.72, y = 0,  
+ #           width = 0.3, height = 0.2)
 p
+plot(st_geometry(mt.counties), add = TRUE)

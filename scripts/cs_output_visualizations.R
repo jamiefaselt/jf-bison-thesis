@@ -33,6 +33,7 @@ levelplot(log(social.cs))
 quantile(social.cs)
 plot(social.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main = "Social Composite Circuitscape Output")
 plot(st_geometry(mt.counties), add = TRUE)
+plot(st_geometry(PAs, add = TRUE))
 
 ##### tribal scenario CS #####
 tribal_layer <- raster("data/raster_layers/tribal_scenario.tif")
