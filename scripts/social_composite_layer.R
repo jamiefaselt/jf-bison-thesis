@@ -27,6 +27,6 @@ plot(fuz.sum)
 writeRaster(fuz.sum, "data/raster_layers/social_composite_layer.tif", overwrite = TRUE)
 social_resistance <- (1+fuz.sum)^10 + landval.pnas/4
 plot(social_resistance)
+social_resistance <- rescale01(social_resistance)
 writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif")
-social_comp <- raster("data/raster_layers/social_composite_layer.tif")
 
