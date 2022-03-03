@@ -299,8 +299,8 @@ p3 <- ggplot()+
 library(cowplot)
 p <- ggdraw(p1)  +
   draw_plot(p2, x = 0.74, y = 0.73, 
-            width = 0.26, height = 0.26) #+
-#  draw_plot(p3, x = 0.72, y = 0,  
- #           width = 0.3, height = 0.2)
+            width = 0.26, height = 0.26) +
+  draw_plot(p3, x = 0.72, y = 0,  
+           width = 0.3, height = 0.2)
 p
 plot(st_geometry(mt.counties), add = TRUE)
