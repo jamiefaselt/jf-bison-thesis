@@ -39,6 +39,9 @@ cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>%
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
+herds_shapefiles <- bind_rows(rez, cmr, yellowstone)
+plot(st_geometry(herds_shapefiles))
+st_write(herds_shapefiles, "data/processed/herd_shapefile_outline.shp")
 # take the centroids
 rez.nodes <- st_centroid(rez)
 cmr.nodes <- st_centroid(cmr)
