@@ -11,7 +11,7 @@ library(maptools)
 
 #template raster
 r <- raster("data/template_raster.tif")
-
+herds <- st_read("data/processed/herd_shapefile_outline.shp")
 # resample the hsi layer to match the extent and resolution of template raster
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi.resample <- resample(hsi, r)
@@ -27,6 +27,7 @@ writeRaster(hsi.resample, "data/processed/hsi_resample.tif")
 # take the inverse of habitat suitability for resistance
 hsi.resample <- raster("data/processed/hsi_resample.tif")
 plot(hsi.resample)
+plot(st_geometry(herds), add = TRUE)
 hsi.inverse <- 1/hsi.resample
 plot(hsi.inverse)
 
