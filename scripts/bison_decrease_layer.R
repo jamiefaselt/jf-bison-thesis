@@ -12,8 +12,7 @@ library(rgdal)
 r <- raster("data/template_raster.tif")
 
 #bison increase preference from Kate's model
-bis.inc <- raster("data/raster_Layers/bis_inc.tif") %>% 
-  resample(., r)
+bis.inc <- raster("data/raster_Layers/bis_inc.tif") 
 plot(bis.inc)
 bis.inc 
 

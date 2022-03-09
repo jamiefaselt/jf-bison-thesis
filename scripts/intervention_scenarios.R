@@ -35,7 +35,8 @@ plot(econ.resistance2)
 
 
 # Tribal Governance Scenario ----------------------------------------------
-tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_jf.tif")
+tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") %>% 
+  resample(., r)
 plot(tribal.wildlife)
 tribal.resist <- 1-tribal.wildlife
 plot(tribal.resist)
