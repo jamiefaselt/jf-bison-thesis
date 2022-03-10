@@ -1,4 +1,8 @@
 # intervention scenarios
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
+
 library(raster)
 library(terra)
 library(dplyr)
@@ -6,6 +10,8 @@ library(sf)
 library(ggmap)
 library(rgdal)
 library(maptools)
+
+herds <- st_read("data/processed/herd_shapefile_outline.shp")
 
 social.composite <- raster("data/raster_layers/social_composite_layer.tif") #or?
 social.resistance <- raster("data/raster_layers/social_resistance_layer.tif")
@@ -25,28 +31,29 @@ plot(econ.scenario.survey) # values now .59-.93
 econ.resistance <- ((1+econ.scenario.survey)^10 + landval.pnas/4) %>% 
   rescale01(.)
 plot(econ.resistance)
+econ.resistance
 plot(social.resistance)
-# does it make sense to posit that higher poverty counties may also be more likely to accept economic incentives? had spoken about this way earlier
-poverty <- raster("data/raster_layers/poverty_layer.tif")
-econ.scenario2 <- social.composite-econ.incentive-poverty
-econ.resistance2 <- ((1+econ.scenario2)^5 + landval.pnas/4) %>% #not really usre how to mathematically justify changing the power raised...
-  rescale01(.)
-plot(econ.resistance2)
+econ.resistance[econ.resistance==0] <- .0001
+writeRaster(econ.resistance, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
 
 
 # Tribal Governance Scenario ----------------------------------------------
 tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") %>% 
   resample(., r)
-plot(tribal.wildlife)
-tribal.resist <- 1-tribal.wildlife
-plot(tribal.resist)
 # need to think through this more philosophically
 tribal.scenario <- social.composite-tribal.wildlife
 plot(tribal.scenario)
-writeRaster(tribal.scenario, "data/raster_layers/tribal_scenario.tif")
+tribal.resistance.scenario <- ((1+tribal.scenario)^10 + landval.pnas/4) %>% 
+  rescale01(.)
+tribal.resistance.scenario[tribal.resistance.scenario==0] <- .0001
+writeRaster(tribal.resistance.scenario, "data/raster_layers/tribal_scenario.tif", overwrite = TRUE)
+plot(tribal.resistance.scenario)
+plot(st_geometry(herds), add= TRUE)
 
+plot(social.resistance)
+plot(st_geometry(herds), add= TRUE)
 
 # Public Lands Scenario ---------------------------------------------------
-
+# first want to find areas with large enough tracts of lands
 
 

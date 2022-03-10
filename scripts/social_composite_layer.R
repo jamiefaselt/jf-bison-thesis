@@ -30,11 +30,13 @@ plot(fuz.sum)
 writeRaster(fuz.sum, "data/raster_layers/social_composite_layer.tif", overwrite = TRUE)
 social_resistance <- ((1+fuz.sum)^10 + landval.pnas/4)
 social_resistance <- rescale01(social_resistance)
+social_resistance[social_resistance==0] <- .0001
 plot(social_resistance)
 plot(st_geometry(herds), add= TRUE)
 
-writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif")
-
+writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif", overwrite = TRUE)
+s <- raster("data/raster_layers/social_resistance_layer.tif")
+s
 #check to see what is contributing most?
 nf <- layout( matrix(c(1,2), ncol=2) )
 plot(social_resistance)
