@@ -41,20 +41,14 @@ tribal.cs <- raster("data/circuitscape_outputs/tribal_scenario/tribal_scenario_o
 plot(tribal.cs)
 plot(log(tribal.cs))
 quantile(tribal.cs)
-plot(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main = "Tribal Governance Scenario")
+plot(tribal.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main = "Tribal Governance Scenario")
 plot(st_geometry(mt.counties), add = TRUE)
-
-rasterImage(tribal.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, xaxs="i", xaxt='n', yaxt='n', ann=FALS)
-
 
 ###### econ scenario cs ######
 econ.cs <- raster("data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc")
 quantile(econ.cs)
-plot(econ.cs, col=magma(256), zlim=c(0,.07), axes = TRUE, main="Economic Incentive Scenario")
+plot(econ.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main="Economic Incentive Scenario")
 plot(st_geometry(mt.counties), add = TRUE)
 
-#### biophys with na edit cs ####
-biophys.edit.cs <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc")
-quantile(biophys.edit.cs)
-plot(biophys.edit.cs, col=plasma(256), zlim=c(0,.1), axes = TRUE, main="Biophys NA Edit")
-plot(st_geometry(mt.counties), add = TRUE)
+#### new herds scenario
+
