@@ -44,6 +44,11 @@ plot(hmi, col=plasma(256), axes = TRUE, main = "Human Modification Layer")
 plot(st_geometry(mt.counties), add = TRUE)
 
 # fuzzy sum approach to combine them from Theobald 2013
+fuzzysum <- function(r1, r2) {
+  rc1.1m <- (1-r1)
+  rc2.1m <- (1-r2)
+  fuz.sum <- 1-(rc1.1m*rc2.1m)
+}
 biophys_fuzsum <- fuzzysum(hsi.rescale, hmi)
 plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 plot(st_geometry(mt.counties), add = TRUE)
@@ -55,5 +60,3 @@ plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistanc
 
 #write raster (saving both gdrive and local computer)
 writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
-b <- raster("data/raster_layers/biophys_resistance_layer.tif")
-plot(b)
