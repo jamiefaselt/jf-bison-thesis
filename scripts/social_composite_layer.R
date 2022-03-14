@@ -29,8 +29,6 @@ plot(fuz.sum)
 
 writeRaster(fuz.sum, "data/raster_layers/social_composite_layer.tif", overwrite = TRUE)
 social_resistance <- ((1+fuz.sum)^10 + landval.pnas/4)
-social_resistance <- rescale01(social_resistance)
-social_resistance[social_resistance==0] <- .0001
 plot(social_resistance)
 plot(st_geometry(herds), add= TRUE)
 
