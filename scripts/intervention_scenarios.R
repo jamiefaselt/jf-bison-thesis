@@ -13,33 +13,40 @@ library(maptools)
 
 herds <- st_read("data/processed/herd_shapefile_outline.shp")
 
+#to compare later
 social.composite <- raster("data/raster_layers/social_composite_layer.tif") #or?
 social.resistance <- raster("data/raster_layers/social_resistance_layer.tif")
-plot(social.composite) # values .66 to 1
-plot(social.resistance) # values 0 to 1
-landval.pnas <- raster("data/raster_layers/landval_layer.tif")
 r <- raster("data/template_raster.tif")
 
 # Economic Incentive ------------------------------------------------------
 econ.incentive <- raster("data/raster_layers/econ_incentive_layer.tif")
-plot(econ.incentive)
+# going to subtract this from cattle layer- do another fuzzy sum and convert back to resistance
+bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") 
+cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
+econ.intervention <- cattle.sales-econ.incentive
+repub <- raster("data/raster_layers/repub_vote_layer.tif")
+landval.pnas <- raster("data/raster_layers/landval_layer.tif")
+parceldensity <- raster("data/raster_layers/parcel_density_layer.tif")
 
-econ.scenario.survey <- social.composite-econ.incentive # social composite is already a fuzzy sum..
-plot(econ.scenario.survey) # values now .59-.93
-# econ incentive values are v small
-# calculate new resistance here?
-econ.resistance <- ((1+econ.scenario.survey)^10 + landval.pnas/4) %>% 
-  rescale01(.)
-plot(econ.resistance)
-econ.resistance
-plot(social.resistance)
-econ.resistance[econ.resistance==0] <- .0001
-writeRaster(econ.resistance, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
+# fuzzy sum approach
+rc1.1m <- 1-bis.dec
+rc2.1m <- 1-econ.intervention
+rc3.1m <- 1-repub
+rc5.1m <- 1-parceldensity
+
+fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc5.1m)
+plot(fuz.sum) 
+
+#make resistance
+econ.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
+plot(econ.scenario)
+plot(st_geometry(herds), add= TRUE)
+writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
 
 
 # Tribal Governance Scenario ----------------------------------------------
-tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") %>% 
-  resample(., r)
+tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") 
+plot(tribal.wildlife)
 # need to think through this more philosophically
 tribal.scenario <- social.composite-tribal.wildlife
 plot(tribal.scenario)
