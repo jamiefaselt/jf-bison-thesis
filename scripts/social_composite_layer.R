@@ -45,4 +45,9 @@ plot(social_resistance)
 plot(repub)
 plot(social_resistance)
 
+# make a null raster
+cellStats(s, min)
+r <- setMinMax(r)
+values(r) <- 160.084
 
+writeRaster(r, "data/processed/null_resistance_layer.tif")
