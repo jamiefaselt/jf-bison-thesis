@@ -58,7 +58,7 @@ yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 herds_shapefiles <- bind_rows(rez, lg.apr, yellowstone)
 plot(st_geometry(herds_shapefiles))
-st_write(herds_shapefiles, "data/processed/herd_shapefile_outline.shp", append = TRUE)
+st_write(herds_shapefiles, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
 
 # take the centroids
 rez.nodes <- st_centroid(rez)
@@ -76,12 +76,13 @@ apr.nodes[apr.nodes$NAME==1, "NAME"] <- "American Prairie Reserve"
 #combine centroids into one shapefile
 all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes)
 plot(all.nodes)
+plot(st_geometry(all.nodes))
 plot(st_geometry(herds_shapefiles), add = TRUE)
 
 all.nodes$ID <- seq(1, nrow(all.nodes))
 all.nodes <- all.nodes %>% st_buffer(., 10000) # buffer of 10 km         
 plot(all.nodes)
-st_write(all.nodes, "data/processed/all_nodes_correct.shp", append = TRUE)
+st_write(all.nodes, "data/processed/all_nodes_correct.shp", delete_layer=TRUE )
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
 writeRaster(node.rast, "data/processed/all_nodes.tif", overwrite = TRUE)
