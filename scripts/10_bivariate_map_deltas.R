@@ -135,8 +135,8 @@ theme_map <- function(...) {
     )
 }
 # Load Elev data and calc hillshade ---------------------------------------
-elev <- getData('alt', country = 'USA')
-elev <- raster("USA")
+#elev <- getData('alt', country = 'USA', download = TRUE)
+elev <- raster("USA1_msk_alt.grd")
 elev.proj <- projectRaster(elev[[1]], biophys.cs)
 
 if(!file.exists("USA_msk_alt.zip")) {
@@ -156,7 +156,7 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 
 # Load centroids ----------------------------------------------------------
 origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
-  #dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
+ # dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
   as(. , "Spatial")
 goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
  # dplyr::filter(., Unit_Nm == "Yellowstone National Park") %>% 
@@ -182,7 +182,10 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, biophys.cs)
 
 pa.cents <- as(goals.proj, "sf")
-pa.cents$lab
+pa.cents$lab <- c("BLACKFEET\n Reservation", "ROCKY BOY'S\n Reservation", "FORT BELKNAP\n Reservation",
+                  "FORT PECK\n Reservation","NORTHERN CHEYENNE\n Reservation","CROW\n Reservation",
+                  "FLATHEAD\n Reservation","American Prairie Reserve\n Private Land",
+                  "Yellowstone\n Nationl Park")
 
 
 # Make the plots ----------------------------------------------------------
