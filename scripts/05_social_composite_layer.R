@@ -1,4 +1,5 @@
 # composite social layer
+# just once need to run all files in intermediate script folder
 
 library(raster)
 library(terra)

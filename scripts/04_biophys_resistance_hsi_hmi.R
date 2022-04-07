@@ -1,4 +1,5 @@
 # biophysical resistance layer
+# just once need to run intermediate/hmi_layer for this resistance layer
 
 library(raster)
 library(terra)
