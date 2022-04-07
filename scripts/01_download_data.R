@@ -126,3 +126,13 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/AP_Property_Boundaries_011022/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
+# Kate's model outputs ----------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1YUnlivNLMqwJWT739j1Jh6pz_tag6e-l" # raster layers for bison increase and such
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/raster_layers/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+
