@@ -33,7 +33,7 @@ writeRaster(implementation.resist2, here::here("data/ProcessedData/ResistanceSur
 writeRaster(implementation.resist3, here::here("data/ProcessedData/ResistanceSurfaces/implement_resist_cattle.tif"), overwrite=TRUE)
 
 # Prep resistance surfaces for gdist  ---------------------------------------------
-biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
+biophys.resist <- raster("data/raster_layers/biophys_resistance_nas_edited.tif")
 implementation.resist1 <- raster("data/raster_layers/social_resistance_layer.tif")
 implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implementation.resist1, max)## drop NAs for costodistance
 
@@ -80,9 +80,11 @@ saveRDS(social.tr1, here::here('data/processed/TransitionLayers/socialtrans1.rds
 # Estimate k low cost paths -----------------------------------------------
 
 origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
   dplyr::filter(., NAME == "BLACKFEET") %>% 
   as(. , "Spatial")
 goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
   dplyr::filter(., NAME == "FORT PECK") %>% 
   as(. , "Spatial")
 origin.proj <- spTransform(origins, crs(biophys.resist))
@@ -94,5 +96,5 @@ social1 <- gen_top_paths(tr = social.tr1, resist = implementation.resist1, numpa
 
 biophys <- gen_top_paths(tr = biophys.tr, resist = biophys.resist, numpath = 5, bufdist = 4000, orig = origin.proj, goal=goals.proj)
 
-saveRDS(social1, here::here('data/ProcessedData/TransitionLayers/socialtop5.rds'))
-saveRDS(biophys, here::here('data/ProcessedData/TransitionLayers/biophystop5.rds'))
+saveRDS(social1, here::here('data/processed/TransitionLayers/socialtop5.rds'))
+saveRDS(biophys, here::here('data/processed/TransitionLayers/biophystop5.rds'))
