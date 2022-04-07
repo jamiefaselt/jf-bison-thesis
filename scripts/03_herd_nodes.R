@@ -34,15 +34,6 @@ lg.apr <- apr %>%
   filter(., area > 20000000)
 lg.apr<-lg.apr[!(lg.apr$Name=="73 Ranch"),]
 
-# OLD
-#mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp") %>% 
- # st_transform(.,st_crs(r))
-#mt_CMR <- mt_fws %>% 
-  #filter(., ORGNAME=="CHARLES M. RUSSELL NATIONAL WILDLIFE REFUGE",  drop=TRUE) %>% 
-  #st_transform(.,st_crs(r)) %>% 
-  #filter(., SUM_GISACR > 530517) %>% 
-  #st_make_valid()
-
 # Yellowstone
 mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
@@ -74,7 +65,8 @@ apr.nodes$NAME <-  seq(1, nrow(apr.nodes)) %>%
 apr.nodes[apr.nodes$NAME==1, "NAME"] <- "American Prairie Reserve"
 
 #combine centroids into one shapefile
-all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes)
+all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes) 
+all.nodes[8,1] <- "American Prairie Reserve"
 plot(all.nodes)
 plot(st_geometry(all.nodes))
 plot(st_geometry(herds_shapefiles), add = TRUE)
