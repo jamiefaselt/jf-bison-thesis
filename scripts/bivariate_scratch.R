@@ -63,7 +63,7 @@ cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>%
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
-PAs <- bind_rows(rez, cmr, yellowstone)
+PAs <- st_read("data/processed/herd_shapefile_outline.shp")
 plot(PAs)
 
 sts <- tigris::states() %>% 
@@ -81,12 +81,12 @@ pa.cents <- st_read("data/processed/all_nodes_correct.shp") %>%
   as(., "sf") 
 
 #pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
-pa.cents$lab <- c("reservations, cmr, yellowstone")
+pa.cents$lab <- c("reservations, apr, yellowstone")
 
 # Plot Circuitscape results with lcps-----------------------------------------------
 library(purrr)
 library(dplyr)
-biophys.cs <- raster("data/circuitscape_outputs/biophys_na_edit/biophys_na_edit_out_cum_curmap.asc")
+biophys.cs <- raster("data/circuitscape_outputs/biophys_`")
 
 b_df <- biophys.cs %>%
   projectRaster(., res=300, crs = crs(r)) %>%
@@ -140,7 +140,9 @@ inset <- ggplot()+
 
 # Plot bivariate raster ---------------------------------------------------
 #normalize (i.e. 0,1) your CS outputs first
-
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
 # convert gridded raster dato dataframe
 biophys.norm <- raster("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc") %>% 
   rescale01(.)
@@ -192,9 +194,7 @@ colmat<-function(nquantiles=10, upperleft=rgb(0,150,235, maxColorValue=255), upp
   col.matrix<-col.matrix[c(seqs), c(seqs)]}
 
 library(classInt)
-col.matrix<-colmat(nquantiles=9)
-
-
+col.matrix<-colmat(nquantiles=9) 
 
 
 legend_5 <- tibble(

@@ -1,5 +1,4 @@
 library(raster)
-library(terra)
 library(dplyr)
 library(sf)
 library(cowplot)
@@ -20,14 +19,17 @@ reproj <- st_transform(mt.padus, crs = st_crs(r))
 head(reproj)
 
 # filter and buffer
-large.pas <- mt.padus %>% 
-  filter(., GIS_Acres > 75000) 
+large.pas <- reproj %>% 
+  filter(., GIS_Acres > 25000) 
 #plot(st_geometry(large.pas))
 
 # bring in the social layer
 bison.inc <- raster("data/raster_layers/bis_inc.tif")
 plot(bison.inc)
 bison.inc
+
+# check out population estimate for bison increase
+bis.inc.pop <- raster("data/raster_layers/bis_inc_pop_est.tif")
 
 #bring in habitat suitability
 hab <- raster("data/processed/hsi_resample.tif")
@@ -46,48 +48,51 @@ extract2 <- raster::extract(hab, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
 extract3 <- raster::extract(tribal.gov, large.pas, buffer = 50000, fun = mean, na.rm = TRUE, df = TRUE)
 extract4 <- raster::extract(comp, large.pas, buffer =50000, fun = mean, na.rm = TRUE, df = TRUE)
 
+#join into one df
 join <- left_join(large.pas, extract) %>% 
   left_join(., extract2) %>% 
   left_join(., extract3) %>% 
   left_join(., extract4)
 
+#view and subset for simplification
 head(join)
 df <- subset(join, select = c(Unit_Nm, ID, bis_inc, social_composite_layer, hsi_resample, tribal_wildlife_gov_tract, d_Des_Tp,  geometry))
 
+#find the upper 75% of habitat suitabillity
+hab.qual<-quantile(df$hsi_resample,probs=c(0.5,0.75, .8))
+hab.qual
+# 75% = 39.61886 
+hab.90 <- df %>% 
+  filter(., hsi_resample > 40.82832 )
 
-# get the top ten values, take the centroids and add coordinate columns to use later
-hab.order<- df %>%   
-  arrange(desc(hsi_resample)) %>% 
-  slice(1:5)
-hab.simp <- st_simplify(hab.order, preserveTopology = FALSE, dTolerance = 1000)
-hab.centroids <- st_centroid(hab.simp) %>%
-  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
-                lat = sf::st_coordinates(.)[,2])
+#find the lowest 25% of social composite
+resistance<-quantile(df$social_composite_layer,probs=c(0,0.25,0.5,0.75))
+resistance
+composite <- hab.90 %>% 
+  filter(., social_composite_layer < 0.8623746 ) %>% 
+  filter(., hsi_resample>42.3)
 
-tribal.order<- df %>%   
-  arrange(desc(tribal_wildlife_gov_tract)) %>% 
-  slice(1:10)
-tribal.order
-tribal.simp <- st_simplify(tribal.order)
-tribal.centroids <- st_centroid(tribal.simp) %>%
-  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
-                lat = sf::st_coordinates(.)[,2])
+centroids <- st_centroid(composite)
+plot(centroids)
+plot(st_geometry(mt.counties))
+plot(st_geometry(centroids), add = TRUE)
 
-social.order<- df %>%   
-  arrange(desc(bis_inc)) %>% 
-  slice(1:10)
-social.simp <- st_simplify(social.order)
-social.centroids <- st_centroid(social.simp) %>%
-  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
-                lat = sf::st_coordinates(.)[,2])
+st_write(composite, "data/processed/new_pa_herds.shp")
 
-composite.order<- df %>%   
-  arrange((social_composite_layer)) %>% 
-  slice(1:10)
-composite.simp <- st_simplify(composite.order, preserveTopology = FALSE, dTolerance = 1000)
-composite.centroid <- st_centroid(composite.simp) %>%
-  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
-                lat = sf::st_coordinates(.)[,2])
+# bring in all herds
+herds <- st_read("data/processed/all_nodes_correct.shp")
+
+
+
+
+
+
+
+
+
+
+
+
 
 #bring in herd shapefils for visual aid
 nodes <- st_read("data/processed/all_nodes_correct.shp")
@@ -102,34 +107,6 @@ hab <- ggplot()+
   geom_sf(data=herds, color = "black")
 hab + geom_text_repel(data = hab.centroids, aes(lon, lat, label = Unit_Nm), size = 3)
 
-#social
-social <- ggplot()+
-  geom_sf(data=social.simp, color = "green")+
-  geom_sf(data=herds, color = "black")
-social + geom_text_repel(data = social.centroids, aes(lon, lat, label = Unit_Nm), size = 3,  max.overlaps = Inf)
-
-#tribal preference
-tribal <- ggplot()+
-  geom_sf(data=tribal.simp, color = "purple")+
-  geom_sf(data=herds, color = "black")
-tribal + geom_text_repel(data = tribal.centroids, aes(lon, lat, label = Unit_Nm), size = 3)
-
-#social composite 
-composite <- ggplot()+
-  geom_sf(data=composite.simp, color = "orange")+
-  geom_sf(data=herds, color = "black")
-composite + geom_text_repel(data = composite.centroid, aes(lon, lat, label = Unit_Nm), size = 3)
-composite.simp
-
-ggplot()+
-  geom_sf(data=herds, color = "black")+
-  geom_sf(data=rmf, color = "orange")+
-  geom_sf(data=composite.simp[4,], color = "blue") #Rocky Mountain Front Conservation Management Area
-
-bob <- st_centroid(hab.simp[5,])
-selway <- st_centroid(hab.simp[4,])
-absaroka <- st_centroid(composite.simp[10,])
-upperbreaks <- st_centroid(hab.simp[2,])
 
 new_data <- df%>% 
   filter(Unit_Nm == "Bob Marshall Wilderness" | Unit_Nm == "Absaroka-Beartooth Wilderness"| Unit_Nm == "Selway-Bitterroot Wilderness" | Unit_Nm == "Upper Missouri River Breaks National Monument"

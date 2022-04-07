@@ -50,12 +50,10 @@ mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundari
 yellowstone <- mt_NPS %>% 
   filter(., grepl('Yellowstone National Park',  UNIT_NAME))
 
-mt.padus <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Designation_StateMT.shp")%>% 
+mt.padus <- st_read("data/processed/new_pa_herds.shp")%>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid()  
-protected <- mt.padus %>% 
-  filter(.,(Unit_Nm == "Yellowstone" | Unit_Nm == "Bob Marshall Wilderness" | Unit_Nm == "Absaroka-Beartooth Wilderness"| Unit_Nm == "Selway-Bitterroot Wilderness" | Unit_Nm == "Upper Missouri River Breaks National Monument"
-  ))
+
 
 #subset and change names for mering
 rez <- subset(mt_reservations, select=c(geometry, NAME))
@@ -63,16 +61,17 @@ lg.apr <- subset(lg.apr, select=c(geometry, Name)) %>%
   rename(NAME = Name)
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
-protected <- subset(protected, select=c(geometry, Unit_Nm)) %>%
+new <- subset(mt.padus, select=c(geometry, Unit_Nm)) %>%
   rename(NAME = Unit_Nm)
-herds_shapefiles <- bind_rows(rez, lg.apr, yellowstone, protected)
+herds_shapefiles <- bind_rows(rez, lg.apr, yellowstone, new)
 plot(st_geometry(herds_shapefiles))
+st_write(herds_shapefiles, "data/processed/new_herd_shapefiles.shp", delete_layer = TRUE)
 #st_write(herds_shapefiles, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
 
 # take the centroids
 rez.nodes <- st_centroid(rez)
 nps.nodes <- st_centroid(yellowstone)
-pa.nodes <- st_centroid(protected)
+pa.nodes <- st_centroid(new)
 # need to do some work to get this to have the right column names to combine them into one shapefile
 apr <- st_combine(lg.apr)
 apr.nodes <- st_centroid(apr) %>% 
@@ -84,16 +83,25 @@ apr.nodes$NAME <-  seq(1, nrow(apr.nodes)) %>%
 apr.nodes[apr.nodes$NAME==1, "NAME"] <- "American Prairie Reserve"
 
 #combine centroids into one shapefile
-all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes, pa.nodes)
+all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes, pa.nodes) %>%
+  dplyr::mutate(lon = sf::st_coordinates(.)[,1],
+                lat = sf::st_coordinates(.)[,2])
 plot(all.nodes)
 plot(st_geometry(all.nodes))
 plot(st_geometry(herds_shapefiles), add = TRUE)
 
+composite <- ggplot()+
+  geom_sf(data=all.nodes, color = "orange")
+composite + geom_text_repel(data = all.nodes, aes(lon, lat, label = NAME), size = 3)
+
 all.nodes$ID <- seq(1, nrow(all.nodes))
 all.nodes <- all.nodes %>% st_buffer(., 10000) # buffer of 10 km         
 plot(all.nodes)
+st_write(all.nodes, "data/processed/new_nodes.shp", delete_layer = TRUE)
 #st_write(all.nodes, "data/processed/all_nodes_correct.shp", delete_layer=TRUE )
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
 writeRaster(node.rast, "data/processed/new_nodes.tif", overwrite = TRUE)
+
+
 

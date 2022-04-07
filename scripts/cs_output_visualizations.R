@@ -1,6 +1,5 @@
 # visualizations
 library(raster)
-library(terra)
 library(dplyr)
 library(sf)
 library(ggmap)
@@ -51,4 +50,7 @@ plot(econ.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main="Economic Incent
 plot(st_geometry(mt.counties), add = TRUE)
 
 #### new herds scenario
-
+new.node <- raster("data/circuitscape_outputs/newnode_biophys_resistance_layer/newnode_biophys_out_cum_curmap.asc")
+quantile(new.node)
+plot(new.node, col=plasma(256), zlim=c(0,.2), axes = TRUE, main="New Herd Incentive Scenario")
+plot(st_geometry(mt.counties), add = TRUE)
