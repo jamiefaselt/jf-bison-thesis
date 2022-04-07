@@ -8,6 +8,11 @@ library(spatialEco)
 library(ggmap)
 library(rgdal)
 library(maptools)
+library(viridis)
+
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
 
 #template raster
 r <- raster("data/template_raster.tif")
@@ -32,16 +37,15 @@ hsi.inverse <- 1/hsi.resample
 plot(hsi.inverse)
 
 # rescale to 0-1 for standardization
+# set the NA values to 1 for highest resistance (won't run in CS otherwise)
 hsi.rescale <- rescale01(hsi.inverse)
 hsi.rescale[is.na(hsi.rescale)]=1
 hsi.rescale
 plot(hsi.rescale, col=plasma(256), axes = TRUE, main = "Habitat Suitability Resistance Layer")
-plot(st_geometry(mt.counties), add = TRUE)
 
 # bring in the human modification layer
 hmi <- raster("data/processed/hmi.crop.tif")
 plot(hmi, col=plasma(256), axes = TRUE, main = "Human Modification Layer")
-plot(st_geometry(mt.counties), add = TRUE)
 
 # fuzzy sum approach to combine them from Theobald 2013
 fuzzysum <- function(r1, r2) {
@@ -51,9 +55,8 @@ fuzzysum <- function(r1, r2) {
 }
 biophys_fuzsum <- fuzzysum(hsi.rescale, hmi)
 plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
-plot(st_geometry(mt.counties), add = TRUE)
 
-
+# make into resistance surface
 biophys_resistance <- (1+biophys_fuzsum)^10
 plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 
