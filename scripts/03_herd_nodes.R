@@ -23,7 +23,7 @@ mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.sh
   st_make_valid()
 
 #apr shapefiles from APR staff
-apr <- st_read("/Users/jamiefaselt/Downloads/AP_Property_Boundaries_011022/doc.kml") %>% 
+apr <- st_read("data/original/AP_Property_Boundaries_011022/doc.kml") %>% 
   st_transform(.,st_crs(r)) %>% 
   st_make_valid() 
 apr$area <- st_area(apr) %>% 
