@@ -105,3 +105,24 @@ gdrive_files <- drive_ls(folder)
 #have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+# Temp CS Output Data -----------------------------------------------------
+# will eventually run these all on the remote computer but for workflow purposes doing this way now
+folder_url <- "https://drive.google.com/drive/u/0/folders/1Fn2EbSNZoJgFBMHqmEaCNxVd4kEkYGZL" # cs outputs temp solution
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/circuitscape_outputs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+# APR Shapefile -----------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/13QUtUL7MKKQ_ap9kD2193ePyXDBBnVLA" # APR shapefiles from APR staff
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/AP_Property_Boundaries_011022/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
