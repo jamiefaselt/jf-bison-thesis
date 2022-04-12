@@ -94,7 +94,7 @@ colmat<-function(nquantiles=10, upperleft=rgb(0,150,235, maxColorValue=255), upp
   seqs[1]<-1
   col.matrix<-col.matrix[c(seqs), c(seqs)]}
 
-
+library(classInt)
 col.matrix<-colmat(nquantiles=5)
 
 
@@ -156,9 +156,11 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 
 # Load centroids ----------------------------------------------------------
 origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
  # dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
   as(. , "Spatial")
 goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
  # dplyr::filter(., Unit_Nm == "Yellowstone National Park") %>% 
   as(. , "Spatial")
 origin.proj <- spTransform(origins, crs(biophys.cs))
@@ -293,3 +295,4 @@ p <- ggdraw(triplot)  +
             width = 0.24, height = 0.24) 
 
 ggsave(here::here("plots/fig3.png"), plot =p)
+
