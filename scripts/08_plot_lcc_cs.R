@@ -19,19 +19,22 @@ biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_la
 
 
 # Load centroids ----------------------------------------------------------
-origins <- st_read(here::here("Data/ProcessedData/shapefiles/studyPAcentroids.shp")) %>% 
-  dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
+origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  dplyr::filter(., NAME == "BLACKFEET") %>% 
+  st_centroid(.) %>% 
   as(. , "Spatial")
-goals <- st_read(here::here("Data/ProcessedData/shapefiles/studyPAcentroids.shp")) %>% 
-  dplyr::filter(., Unit_Nm == "Yellowstone National Park") %>% 
+goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  dplyr::filter(., NAME == "FORT PECK") %>% 
+  st_centroid(.) %>% 
   as(. , "Spatial")
+
 origin.proj <- spTransform(origins, crs(biophys.cs))
 goals.proj <- spTransform(goals, crs(biophys.cs))
 
 
 # Load k cost paths -------------------------------------------------------
 
-biophys <- readRDS(here::here('Data/ProcessedData/TransitionLayers/biophystop5.rds'))
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop5.rds'))
 biophys.lst <- biophys[[1]]
 
 
@@ -73,8 +76,8 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 
 # Get vectors for maps ----------------------------------------------------
 
-PAs <- st_read(here::here("Data/ProcessedData/shapefiles/studyPAs.shp")) %>% 
-  dplyr::filter(. , Unit_Nm == "Yellowstone National Park" | Unit_Nm == "Weminuche Wilderness") %>% 
+PAs <- st_read(here::here("Data/Processed/herd_shapefile_outline.shp")) %>% 
+  dplyr::filter(. , NAME == "BLACKFEET" | NAME == "FORT PECK") %>% 
   st_transform(. , crs = crs(biophys.cs))
 
 sts <- tigris::states() %>% 
@@ -90,7 +93,7 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, biophys.cs)
 
 pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
-pa.cents$lab <- c("Weminche \n Wilderness Area", "Yellowstone \n National Park")
+pa.cents$lab <- c("Blackfeet \n Nation", "Fort Peck \n Nation")
 # Plot Circuitscape results -----------------------------------------------
 
 
@@ -121,7 +124,7 @@ p.cs <- RStoolbox::ggR(hills3) +
     interpolate = TRUE
   ) +
   scale_fill_viridis_c(option="B", 
-                       limits=c(-0.000000001,0.005), 
+                       limits=c(-0.000000001,0.09), 
                        breaks = c(0,0.005),
                        labels = c("Low","High")) +
   geom_sf(data=biophys.lcp.sf, aes(color=as.character(rank)), fill=NA, lwd=1.15) +
@@ -154,4 +157,4 @@ p.combined <- ggdraw(p.cs) +
 
 
 
-cowplot::save_plot(here::here("plots/fig1.png"), plot =p.combined, base_height = 4)
+cowplot::save_plot(here::here("plots/fig1.draft.png"), plot =p.combined, base_height = 4)
