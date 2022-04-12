@@ -9,7 +9,7 @@ library(magrittr)
 # Load top paths function -------------------------------------------------
 
 
-source(here::here("functions/06_fun_K_lcp.R"))
+source(here::here("scripts/06_fun_K_lcp.R"))
 
 
 
