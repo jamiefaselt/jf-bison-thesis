@@ -5,7 +5,7 @@
 .secrets
 
 .DS_Store
-
+/plots
 /data/.DS_Store.DS_Store
 
 USA1_msk_alt.grd
