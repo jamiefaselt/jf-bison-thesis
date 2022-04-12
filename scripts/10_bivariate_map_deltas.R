@@ -3,7 +3,9 @@ library(rasterVis)
 library(ggplot2)
 library(tidyverse)
 library(cmocean)
-
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
 # load inital cs layers ---------------------------------------------------
 implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc'))
 biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc'))
@@ -12,7 +14,6 @@ new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_so
 
 
 # convert to dataframes ---------------------------------------------------
-
 biophys.df <- biophys.cs %>%
   projectRaster(., res=300, crs = crs(biophys.cs)) %>%
   rasterToPoints %>%
