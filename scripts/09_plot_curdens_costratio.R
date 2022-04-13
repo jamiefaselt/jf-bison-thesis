@@ -12,22 +12,24 @@ library(ggsci)
 library(stringr)
 library(egg)
 # Load transition layers --------------------------------------------------
-social.tr1 <- readRDS(here::here('data/ProcessedData/TransitionLayers/socialtrans1.rds'))
-biophys.tr <- readRDS(here::here('data/ProcessedData/TransitionLayers/biophystrans.rds'))
-jurisdiction.tr <- readRDS(here::here('data/ProcessedData/TransitionLayers/socialtrans_jurisdiction.rds'))
-cattle.tr <- readRDS(here::here('data/ProcessedData/TransitionLayers/socialtrans_cattle.rds'))
+social.tr1 <- readRDS(here::here('data/Processed/TransitionLayers/socialtrans1.rds'))
+biophys.tr <- readRDS(here::here('data/Processed/TransitionLayers/biophystrans.rds'))
+#jurisdiction.tr <- readRDS(here::here('data/ProcessedData/TransitionLayers/socialtrans_jurisdiction.rds'))
+#cattle.tr <- readRDS(here::here('data/ProcessedData/TransitionLayers/socialtrans_cattle.rds'))
 
 # Load Resistance surfaces ------------------------------------------------
-biophys.resist <- raster(here::here("data/ProcessedData/ResistanceSurfaces/biophys_resist.tif"))
-implementation.resist1 <- raster(here::here("data/ProcessedData/ResistanceSurfaces/implement_resist.tif"))
-implementation.resist2 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_jurisdiction.tif'))
-implementation.resist3 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_cattle.tif'))
+biophys.resist <- raster(here::here("data/raster_layers/biophys_resistance_layer.tif"))
+implementation.resist1 <- raster(here::here("data/raster_layers/social_resistance_layer.tif"))
+#implementation.resist2 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_jurisdiction.tif'))
+#implementation.resist3 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_cattle.tif'))
 # Load centroids ----------------------------------------------------------
-origins <- st_read(here::here("Data/ProcessedData/shapefiles/studyPAcentroids.shp")) %>% 
-  dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
+origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
+  dplyr::filter(., NAME == "BLACKFEET") %>% 
   as(. , "Spatial")
-goals <- st_read(here::here("Data/ProcessedData/shapefiles/studyPAcentroids.shp")) %>% 
-  dplyr::filter(., Unit_Nm == "Yellowstone National Park") %>% 
+goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+  st_centroid(.) %>% 
+  dplyr::filter(., NAME == "FORT PECK") %>% 
   as(. , "Spatial")
 origin.proj <- spTransform(origins, crs(biophys.resist))
 goals.proj <- spTransform(goals, crs(biophys.resist))
@@ -35,12 +37,12 @@ goals.proj <- spTransform(goals, crs(biophys.resist))
 
 # Load k cost paths -------------------------------------------------------
 
-social1 <- readRDS(here::here('Data/ProcessedData/TransitionLayers/socialtop5.rds'))
-biophys <- readRDS(here::here('Data/ProcessedData/TransitionLayers/biophystop5.rds'))
+social1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtop5.rds'))
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop5.rds'))
 
 # Load biophys circuitscape run -------------------------------------------
 
-biophys.cs <- raster(here::here("data/ProcessedData/biophys/biophys_cum_curmap.asc"))
+biophys.cs <- raster(here::here("data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc"))
 
 # Create Euclidean distance-----------------------------------------------------
 
@@ -63,11 +65,11 @@ biophys.lst <- biophys[[1]]
 #all.lst <- c(social1.lst, social2.lst, biophys.lst)
 all.lst <- c(social1.lst, biophys.lst)
 soc.costdist1 <- accCost(social.tr1, origin.proj)
-jurisdiction.costdist <- accCost(jurisdiction.tr, origin.proj)
-cattle.costdist <- accCost(cattle.tr, origin.proj)
+#jurisdiction.costdist <- accCost(jurisdiction.tr, origin.proj)
+#cattle.costdist <- accCost(cattle.tr, origin.proj)
 bio.costdist <- accCost(biophys.tr, origin.proj)
 #dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, soc.costdist2)
-dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, jurisdiction.costdist, cattle.costdist, biophys.cs)
+dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, biophys.cs)#jurisdiction.costdist, cattle.costdist, biophys.cs)
 
 distance.extract <- lapply(1:length(all.lst), function(x) raster::extract(dist.stack, rasterToPolygons(all.lst[[x]], dissolve = TRUE)))
 #names(distance.extract) <- c("s1_1", "s1_2", "s1_3", "s1_4", "s1_5","s2_1", "s2_2", "s2_3", "s2_4", "s2_5","b1", "b2", "b3", "b4", "b5")
@@ -78,7 +80,7 @@ names(dist.df.list) <- names(distance.extract)
 
 dist.df <- dplyr::bind_rows(dist.df.list, .id="column_label")
 #colnames(dist.df) <- c("LCPID","eucdist","bio.costdist", "soc.costdist1", "soc.costdist2")
-colnames(dist.df) <- c("LCPID","eucdist","bio.costdist", "soc.costdist1", "jurisdiction.costdist","cattle.costdist", "biophys.cur")
+colnames(dist.df) <- c("LCPID","eucdist","bio.costdist", "soc.costdist1",  "biophys.cur")
 
 dist.cln <- do.call(data.frame,lapply(dist.df, function(x) replace(x, is.infinite(x),NA)))
 
@@ -113,14 +115,12 @@ max.difs[-1] <- lapply(max.bphys.lcp[-1], function(x) x - min(x, na.rm=TRUE))
 colnames(max.difs)[2] <- "delta_bio.costdist"
 
 dist.group <- dist.90 %>% 
-  dplyr::left_join(., max.difs) %>%
-  dplyr::mutate(., abase = soc.costdist1/bio.costdist,
-                ajuris = jurisdiction.costdist/bio.costdist,
-                bcattle = cattle.costdist/bio.costdist) %>%
-  dplyr::filter(.,  startsWith(LCPID, "b")) %>% 
-  dplyr::select(., c(1,8:11)) %>% 
-  pivot_longer(., !c(LCPID, delta_bio.costdist)) %>% 
-  dplyr::mutate(., ID = str_remove_all( LCPID, fixed("b")))
+  dplyr::left_join(., max.difs) %>% 
+  dplyr::mutate(., abase = soc.costdist1/bio.costdist) %>% 
+                  dplyr::filter(.,  startsWith(LCPID, "b")) %>% 
+                  dplyr::select(., c(1,3:7)) %>% 
+                  pivot_longer(., !c(LCPID, delta_bio.costdist)) %>% 
+                  dplyr::mutate(., ID = str_remove_all( LCPID, fixed("b")))
 
 dist.sum <- dist.group %>% 
   group_by(., ID, name) %>% 
