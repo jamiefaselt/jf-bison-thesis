@@ -3,6 +3,8 @@ library(rasterVis)
 library(ggplot2)
 library(tidyverse)
 library(cmocean)
+library(sf)
+library(patchwork)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
@@ -136,16 +138,10 @@ theme_map <- function(...) {
     )
 }
 # Load Elev data and calc hillshade ---------------------------------------
-#elev <- getData('alt', country = 'USA', download = TRUE)
-elev <- raster("USA1_msk_alt.grd")
+elev <- getData('alt', country = 'USA', download = TRUE)
+#elev <- raster("USA1_msk_alt.grd")
 elev.proj <- projectRaster(elev[[1]], biophys.cs)
 
-if(!file.exists("USA_msk_alt.zip")) {
-  u = "https://biogeo.ucdavis.edu/data/diva/msk_alt/USA_msk_alt.zip"
-  download.file(u, "prec_10m_bil.zip")
-  unzip("USA_msk_alt.zip", exdir = "msk_alt")
-}
-elev = stack(list.files("USA", pattern = "alt", full.names = TRUE))
 
 elev.crop <- crop(elev.proj, biophys.cs)
 elev.mod <- elev.crop *10
@@ -185,10 +181,10 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, biophys.cs)
 
 pa.cents <- as(goals.proj, "sf")
-pa.cents$lab <- c("BLACKFEET\n Reservation", "ROCKY BOY'S\n Reservation", "FORT BELKNAP\n Reservation",
-                  "FORT PECK\n Reservation","NORTHERN CHEYENNE\n Reservation","CROW\n Reservation",
-                  "FLATHEAD\n Reservation","American Prairie Reserve\n Private Land",
-                  "Yellowstone\n Nationl Park")
+pa.cents$lab <- c("Blackfeet", "Rocky Boy's", "Fort Belknap",
+                  "Fort Peck","Northern Cheyenne","Crow",
+                  "Flathead","American Prairie Reserve",
+                  "Yellowstone")
 
 
 # Make the plots ----------------------------------------------------------
@@ -208,7 +204,7 @@ p1 <- RStoolbox::ggR(hills3) +
   scale_fill_identity() +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "white")+
   theme_map() +
   theme(legend.position = 'none')
 
@@ -252,7 +248,7 @@ p2 <- RStoolbox::ggR(hills3) +
   scale_fill_cmocean(name="curl") +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "black")+
+  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "black")+
   guides(fill = guide_colorbar(nbin = 8,  title.position = "top", 
                                label.position="bottom", title = "\u0394 in rank")) +
   theme_map() +
@@ -274,7 +270,7 @@ p3 <- RStoolbox::ggR(hills3) +
   scale_fill_cmocean(name="curl", limits = c(-3,3)) +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "black")+
+  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "black")+
   guides(fill = guide_colorbar(nbin = 8,  title.position = "top", 
                                label.position="bottom", title = "\u0394 in rank")) +
   theme_map() +
