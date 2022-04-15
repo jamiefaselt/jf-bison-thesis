@@ -55,7 +55,7 @@ eucdist <- accCost(euclidean.tr, origin.proj)
 #extract values for last 50km
 euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
 units(euc.dist) <- NULL
-threshold <- as.vector(euc.dist - 10000)
+threshold <- as.vector(euc.dist - 10000) # 10 km short of the destination
 # Extract cost and current values -----------------------------------------
 
 
@@ -69,7 +69,7 @@ soc.costdist1 <- accCost(social.tr1, origin.proj)
 #cattle.costdist <- accCost(cattle.tr, origin.proj)
 bio.costdist <- accCost(biophys.tr, origin.proj)
 #dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, soc.costdist2)
-dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, biophys.cs)#jurisdiction.costdist, cattle.costdist, biophys.cs)
+dist.stack <- stack(eucdist, bio.costdist, soc.costdist1, biophys.cs)#jurisdiction.costdist, cattle.costdist, biophys.cs)
 
 distance.extract <- lapply(1:length(all.lst), function(x) raster::extract(dist.stack, rasterToPolygons(all.lst[[x]], dissolve = TRUE)))
 #names(distance.extract) <- c("s1_1", "s1_2", "s1_3", "s1_4", "s1_5","s2_1", "s2_2", "s2_3", "s2_4", "s2_5","b1", "b2", "b3", "b4", "b5")
