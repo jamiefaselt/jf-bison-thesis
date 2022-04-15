@@ -63,4 +63,4 @@ plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistanc
 
 
 #write raster (saving both gdrive and local computer)
-writeRaster(biophys_fuzsum, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
+writeRaster(biophys_resistance, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
