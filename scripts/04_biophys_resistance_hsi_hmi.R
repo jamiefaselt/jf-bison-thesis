@@ -22,6 +22,9 @@ herds <- st_read("data/processed/herd_shapefile_outline.shp")
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi.resample <- resample(hsi, r)
 plot(hsi.resample)
+table(is.na(hsi.resample[]))
+plot(hsi.resample, colNA="red")
+#writeRaster(hsi.resample, "data/processed/hsi_resample_wrongmax.tif", overwrite = TRUE)
 #write this for future use so I won't have to resample again!
 
 # according to Brent (creater of hsi layer) the max value should be 73 NOT 128
@@ -36,6 +39,8 @@ plot(hsi.resample)
 plot(st_geometry(herds), add = TRUE)
 hsi.inverse <- 1/hsi.resample
 plot(hsi.inverse)
+table(is.na(hsi.resample[]))
+plot(hsi.resample, colNA="red")
 
 # rescale to 0-1 for standardization
 # set the NA values to 1 for highest resistance (won't run in CS otherwise)
