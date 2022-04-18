@@ -20,7 +20,7 @@ biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_la
 
 # Load centroids ----------------------------------------------------------
 origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
-  dplyr::filter(., NAME == "BLACKFEET") %>% 
+  dplyr::filter(., NAME == "CROW") %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
 goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
@@ -34,7 +34,7 @@ goals.proj <- spTransform(goals, crs(biophys.cs))
 
 # Load k cost paths -------------------------------------------------------
 
-biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop5.rds'))
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop4_CROW_FP.rds'))
 biophys.lst <- biophys[[1]]
 
 
@@ -77,7 +77,7 @@ hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 # Get vectors for maps ----------------------------------------------------
 
 PAs <- st_read(here::here("Data/Processed/herd_shapefile_outline.shp")) %>% 
-  dplyr::filter(. , NAME == "BLACKFEET" | NAME == "FORT PECK") %>% 
+  dplyr::filter(. , NAME == "CROW" | NAME == "FORT PECK") %>% 
   st_transform(. , crs = crs(biophys.cs))
 
 sts <- tigris::states() %>% 
@@ -93,7 +93,7 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, biophys.cs)
 
 pa.cents <- rbind(as(origin.proj,"sf"), as(goals.proj, "sf"))
-pa.cents$lab <- c("Blackfeet \n Nation", "Fort Peck \n Nation")
+pa.cents$lab <- c("CROW", "Fort Peck")
 # Plot Circuitscape results -----------------------------------------------
 
 
@@ -157,4 +157,4 @@ p.combined <- ggdraw(p.cs) +
 
 
 
-cowplot::save_plot(here::here("plots/fig1.draft.png"), plot =p.combined, base_height = 4)
+cowplot::save_plot(here::here("plots/fig1.draft_4_CROW_FP.png"), plot =p.combined, base_height = 4)
