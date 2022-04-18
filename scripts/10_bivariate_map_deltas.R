@@ -208,7 +208,7 @@ p1 <- RStoolbox::ggR(hills3) +
   theme_map() +
   theme(legend.position = 'none')
 
-
+p1
 l <- legend.5 %>%
   separate(group,
            into = c("biophys", "implement"),
@@ -291,5 +291,5 @@ p <- ggdraw(triplot)  +
   draw_plot(l, x = 0, y = 0, 
             width = 0.24, height = 0.24) 
 
-ggsave(here::here("plots/fig3.png"), plot =p)
+ggsave(here::here("plots/fig3_draft.png"), plot =p)
 
