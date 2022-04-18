@@ -19,6 +19,8 @@ biophys.tr <- readRDS(here::here('data/Processed/TransitionLayers/biophystrans.r
 
 # Load Resistance surfaces ------------------------------------------------
 biophys.resist <- raster(here::here("data/raster_layers/biophys_resistance_layer.tif"))
+biophys.resist[is.na(biophys.resist[])] <- 5* cellStats(biophys.resist, max)## drop NAs for costodistance
+
 implementation.resist1 <- raster(here::here("data/raster_layers/social_resistance_layer.tif"))
 #implementation.resist2 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_jurisdiction.tif'))
 #implementation.resist3 <-  raster(here::here('data/ProcessedData/ResistanceSurfaces/implement_resist_cattle.tif'))
@@ -37,8 +39,8 @@ goals.proj <- spTransform(goals, crs(biophys.resist))
 
 # Load k cost paths -------------------------------------------------------
 
-social1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtop4.rds'))
-biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop4.rds'))
+social1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtop5.rds'))
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/biophystop5.rds'))
 
 # Load biophys circuitscape run -------------------------------------------
 
@@ -51,12 +53,13 @@ values(euclidean.resist) <- 1
 euclidean.tr <- transition(1/euclidean.resist, transitionFunction = mean, 16)
 euclidean.tr <- geoCorrection(euclidean.tr, "c")
 saveRDS(euclidean.tr, here::here('Data/Processed/TransitionLayers/euclidian_tr.rds'))
-euclidean.tr <- readRDS("data/processed/TransitionLayers/euclidian_tr.rds")
+#euclidean.tr <- readRDS("data/processed/TransitionLayers/euclidian_tr.rds")
 eucdist <- accCost(euclidean.tr, origin.proj)
 
 #extract values for last 50km
 euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
 units(euc.dist) <- NULL
+
 threshold <- as.vector(euc.dist - 10000) # 10 km short of the destination
 # Extract cost and current values -----------------------------------------
 
@@ -70,28 +73,20 @@ soc.costdist1 <- accCost(social.tr1, origin.proj)
 #jurisdiction.costdist <- accCost(jurisdiction.tr, origin.proj)
 #cattle.costdist <- accCost(cattle.tr, origin.proj)
 bio.costdist <- accCost(biophys.tr, origin.proj)
-bio.costdist <- ifelse(bio.costdist, is.infinite, 0, bio.costdist)
+#bio.costdist <- ifelse(bio.costdist, is.infinite, 0, bio.costdist)
 #new.trans <- ifelse(is.infinite(biophys.tr), 0, biophys.tr)
 table(is.na(biophys.resist[]))
 plot(biophys.resist, colNA="red")
-biophys.resist[is.na(biophys.resist[])] <- 1024
-
-
-
-biophys.tr[is.infinite(biophys.tr[])] <- 0
-
-bio.costdist[is.infinite(bio.costdist[])] <- 0 
-
-table(is.na(biophys.resist[]))
+plot(bio.costdist)
 
 #dist.stack <- stack(eucdist,bio.costdist, soc.costdist1, soc.costdist2)
 dist.stack <- stack(eucdist, bio.costdist, soc.costdist1, biophys.cs)#jurisdiction.costdist, cattle.costdist, biophys.cs)
 table(is.na(dist.stack[]))
 
 
-distance.extract <- lapply(1:length(all.lst), function(x) raster::extract(dist.stack, rasterToPolygons(all.lst[[x]], dissolve = TRUE)))
+distance.extract <- lapply(1:length(all.lst), function(x) raster::extract(dist.stack, rasterToPolygons(all.lst[[x]], dissolve = TRUE, na.rm = TRUE)))
 #names(distance.extract) <- c("s1_1", "s1_2", "s1_3", "s1_4", "s1_5","s2_1", "s2_2", "s2_3", "s2_4", "s2_5","b1", "b2", "b3", "b4", "b5")
-names(distance.extract) <- c("s1", "s2", "s3", "s4","b1", "b2", "b3", "b4")
+names(distance.extract) <- c("s1", "s2", "s3", "s4", "s5", "b1", "b2", "b3", "b4","b5")
 
 dist.df.list <- lapply(1:length(distance.extract), function(x) as.data.frame(distance.extract[[x]]))
 names(dist.df.list) <- names(distance.extract)
@@ -142,10 +137,9 @@ dist.group <- dist.90 %>%
 
 dist.sum <- dist.group %>% 
   group_by(., ID, name) %>% 
-  summarise(mn = mean(value),
-            std = sd(value),
-            costdist = log(delta_bio.costdist, 10))
-
+  summarise(mn = mean(value, na.rm = TRUE),
+            std = sd(value, na.rm = TRUE),
+            costdist = delta_bio.costdist, 10)
 
 p1 <- ggplot(data = filter(dist.sum, name == "abase"), mapping = aes(x = ID, 
                                                                      y = mn, 

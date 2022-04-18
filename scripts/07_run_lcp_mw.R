@@ -15,6 +15,7 @@ source(here::here("scripts/06_fun_K_lcp.R"))
 
 # Prep resistance surfaces for gdist  ---------------------------------------------
 biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
+biophys.resist[is.na(biophys.resist[])] <- 5* cellStats(biophys.resist, max)## drop NAs for costodistance
 implementation.resist1 <- raster("data/raster_layers/social_resistance_layer.tif")
 implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implementation.resist1, max)## drop NAs for costodistance
 
@@ -29,9 +30,9 @@ pa.rast <- rasterize(as(origins, "Spatial"), biophys.resist, field="ID")
 
 # Create Transition Matrix ------------------------------------------------
 #need to convert resistance to conductance
-#biophys.tr <- transition(1/biophys.resist, transitionFunction = mean, 16)
-#biophys.tr <- geoCorrection(biophys.tr, "c")
-#saveRDS(biophys.tr, here::here('data/processed/TransitionLayers/biophystrans.rds'))
+biophys.tr <- transition(1/biophys.resist, transitionFunction = mean, 16)
+biophys.tr <- geoCorrection(biophys.tr, "c")
+saveRDS(biophys.tr, here::here('data/processed/TransitionLayers/biophystrans.rds'))
 biophys.tr <- readRDS(here::here('Data/Processed/TransitionLayers/biophystrans.rds'))
 
 #social.tr1 <- transition(1/implementation.resist1, transitionFunction = mean, 16)
@@ -61,11 +62,11 @@ goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>%
 origin.proj <- spTransform(origins, crs(biophys.resist))
 goals.proj <- spTransform(goals, crs(biophys.resist))
 
-social1 <- gen_top_paths(tr = social.tr1, resist = implementation.resist1, numpath = 4, bufdist = 4000, orig = origin.proj, goal=goals.proj)
+social1 <- gen_top_paths(tr = social.tr1, resist = implementation.resist1, numpath = 5, bufdist = 4000, orig = origin.proj, goal=goals.proj)
 
 #social2 <- gen_top_paths(tr = social.tr2, resist = implementation.resist2, numpath = 5, bufdist = 4000, orig = origin.proj, goal=goals.proj)
 
-biophys <- gen_top_paths(tr = biophys.tr, resist = biophys.resist, numpath = 4, bufdist = 4000, orig = origin.proj, goal=goals.proj)
+biophys <- gen_top_paths(tr = biophys.tr, resist = biophys.resist, numpath = 5, bufdist = 4000, orig = origin.proj, goal=goals.proj)
 
-saveRDS(social1, here::here('data/processed/TransitionLayers/socialtop4_BLACKFEET_FP.rds'))
-saveRDS(biophys, here::here('data/processed/TransitionLayers/biophystop4_BLACKFEET_FP.rds'))
+saveRDS(social1, here::here('data/processed/TransitionLayers/socialtop5_BLACKFEET_FP.rds'))
+saveRDS(biophys, here::here('data/processed/TransitionLayers/biophystop5_BLACKFEET_FP.rds'))
