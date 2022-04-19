@@ -202,13 +202,14 @@ p1 <- RStoolbox::ggR(hills3) +
     interpolate = TRUE
   ) +
   scale_fill_identity() +
-  geom_sf(data = PAs, fill = "forestgreen") +
+  geom_sf(data = PAs, fill = NA, color = "black") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "white")+
+  ggrepel::geom_text_repel(data = pa.cents, size = 3.5, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), fontface="plain", color = "white")+
   theme_map() +
   theme(legend.position = 'none')
 
 p1
+
 l <- legend.5 %>%
   separate(group,
            into = c("biophys", "implement"),
@@ -234,62 +235,45 @@ l <- legend.5 %>%
 
 
 
-p2 <- RStoolbox::ggR(hills3) +
-  geom_raster(
-    data = econ.reclass,
-    aes(
-      x=x,
-      y=y,
-      fill=difnorm
+p2 <- legend.5 %>%
+  separate(group,
+           into = c("biophys", "implement"),
+           sep = " - ") %>%
+  mutate(biophys = as.integer(biophys),
+         implement = as.integer(implement)) %>%
+  ggplot() +
+  geom_tile(mapping = aes(
+    x = biophys,
+    y = implement,
+    fill = fill)) +
+  scale_fill_identity() +
+  labs(x = "Biophysical →\n probability",
+       y = "Implementation →\n probability") +
+  theme_void() +
+  theme(
+    axis.title = element_text(
+      size = 8,
     ),
-    alpha=0.8,
-    interpolate = TRUE
-  ) +
-  scale_fill_cmocean(name="curl") +
-  geom_sf(data = PAs, fill = "forestgreen") +
-  geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "black")+
-  guides(fill = guide_colorbar(nbin = 8,  title.position = "top", 
-                               label.position="bottom", title = "\u0394 in rank")) +
+    axis.title.y = element_text(angle = 90),
+    plot.background = element_rect(fill="white", color = "black")) +
+  coord_fixed()
+
+p3 <- ggplot()+
+  geom_sf(data=conus, fill="white") +
+  geom_sf(data =st_as_sfc(st_bbox(biophys.cs)), fill=NA, color="red") +
   theme_map() +
-  theme(legend.position = 'bottom',
-        legend.direction = 'horizontal',
-        legend.justification = "center"  )
+  theme(panel.background = element_rect(fill = "gray", color = "black"),
+        plot.background = element_rect(fill = NA, color = NA))
 
-p3 <- RStoolbox::ggR(hills3) +
-  geom_raster(
-    data = new.node.reclass,
-    aes(
-      x=x,
-      y=y,
-      fill=difnorm
-    ),
-    alpha=0.8,
-    interpolate = TRUE
-  ) +
-  scale_fill_cmocean(name="curl", limits = c(-3,3)) +
-  geom_sf(data = PAs, fill = "forestgreen") +
-  geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="plain", color = "black")+
-  guides(fill = guide_colorbar(nbin = 8,  title.position = "top", 
-                               label.position="bottom", title = "\u0394 in rank")) +
-  theme_map() +
-  theme(legend.position = 'bottom',
-        legend.direction = 'horizontal',
-        legend.justification = "center"  )
-
-deltas <- p2 + p3 + plot_layout(guides = 'collect') & theme(legend.position = "bottom", legend.justification = "center",
-                                                            legend.margin=margin(0,0,0,0),
-                                                            legend.box.margin=margin(-15,-10,-10,-10))
-
-triplot <- p1 + p2 + p3 + plot_annotation(tag_levels = "A", tag_suffix = ")")& theme(legend.position = "bottom", legend.justification = "center",
-                                                                                     legend.margin=margin(0,0,0,0),
-                                                                                     legend.box.margin=margin(-15,-10,-10,-10))   
+library(cowplot)
+p <- ggdraw(p1)  +
+  draw_plot(p2, x = 0.74, y = 0.73, 
+            width = 0.26, height = 0.26) +
+  draw_plot(p3, x = 0.72, y = 0,  
+            width = 0.3, height = 0.2)
+p
 
 
-p <- ggdraw(triplot)  +
-  draw_plot(l, x = 0, y = 0, 
-            width = 0.24, height = 0.24) 
 
 ggsave(here::here("plots/fig3_draft.png"), plot =p)
 
