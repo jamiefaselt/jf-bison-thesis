@@ -8,9 +8,14 @@ library(patchwork)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
+cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
+r <- raster("data/template_raster.tif") %>% 
+  mask(., cattle)
 # load inital cs layers ---------------------------------------------------
-implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc'))
-biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc'))
+implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc')) %>% 
+  mask(., r)
+biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc')) %>% 
+  mask(., r)
 econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))
 new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc"))
 
@@ -143,7 +148,8 @@ elev <- getData('alt', country = 'USA', download = TRUE)
 elev.proj <- projectRaster(elev[[1]], biophys.cs)
 
 
-elev.crop <- crop(elev.proj, biophys.cs)
+elev.crop <- crop(elev.proj, biophys.cs) #%>% 
+  #mask(., r)
 elev.mod <- elev.crop *10
 slope <- terrain(elev.mod, opt='slope')
 aspect <- terrain(elev.mod, opt='aspect')
@@ -164,7 +170,7 @@ origin.proj <- spTransform(origins, crs(biophys.cs))
 goals.proj <- spTransform(goals, crs(biophys.cs))
 # Get vectors for maps ----------------------------------------------------
 
-PAs <- st_read(here::here("data/processed/herd_shapefile_outline.shp")) #%>% 
+PAs <- st_read(here::here("data/processed/herd_shapefile.shp")) #%>% 
  # dplyr::filter(. , Unit_Nm == "Yellowstone National Park" | Unit_Nm == "Weminuche Wilderness") %>% 
 #  st_transform(. , crs = crs(biophys.cs))
 
@@ -275,5 +281,5 @@ p
 
 
 
-ggsave(here::here("plots/fig3_draft.png"), plot =p)
+ggsave(here::here("plots/fig3_draft_fullbase.png"), plot =p)
 

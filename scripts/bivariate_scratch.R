@@ -3,6 +3,9 @@ library(tidyverse)
 library(sf)
 # template raster
 r <- raster("data/template_raster.tif")
+cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
+r <- raster("data/template_raster.tif") %>% 
+  mask(., cattle)
 
 # Custom map theme --------------------------------------------------------
 theme_map <- function(...) {
@@ -31,7 +34,8 @@ elev <- getData('alt', country = 'USA')
 elev.proj <- projectRaster(elev[[1]], r)
 
 
-elev.crop <- crop(elev.proj, r)
+elev.crop <- crop(elev.proj, r) %>% 
+  mask(., r)
 elev.mod <- elev.crop *10
 slope <- terrain(elev.mod, opt='slope')
 aspect <- terrain(elev.mod, opt='aspect')
@@ -63,7 +67,7 @@ cmr <- subset(mt_CMR, select=c(geometry, ORGNAME)) %>%
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
-PAs <- st_read("data/processed/herd_shapefile_outline.shp")
+PAs <- st_read("data/processed/herd_shapefile.shp")
 plot(PAs)
 
 sts <- tigris::states() %>% 
