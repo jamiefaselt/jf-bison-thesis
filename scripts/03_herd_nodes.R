@@ -33,6 +33,12 @@ apr$area <- st_area(apr) %>%
 lg.apr <- apr %>% 
   filter(., area > 20000000)
 lg.apr<-lg.apr[!(lg.apr$Name=="73 Ranch"),]
+apr <- st_combine(lg.apr) %>% 
+  st_as_sf %>% 
+  rename(geometry = x) 
+apr$NAME <-  seq(1, nrow(apr)) 
+apr[apr$NAME==1, "NAME"] <- "American Prairie Reserve"
+
 
 # Yellowstone
 mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp") %>% 
@@ -40,42 +46,23 @@ mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundari
   st_make_valid()
 yellowstone <- mt_NPS %>% 
   filter(., grepl('Yellowstone National Park',  UNIT_NAME))
-
-#subset and change names for mering
-rez <- subset(mt_reservations, select=c(geometry, NAME))
-lg.apr <- subset(lg.apr, select=c(geometry, Name)) %>%
-  rename(NAME = Name)
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
-herds_shapefiles <- bind_rows(rez, lg.apr, yellowstone)
-plot(st_geometry(herds_shapefiles))
-st_write(herds_shapefiles, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
+herds <- bind_rows(mt_reservations, apr, yellowstone) 
+plot(st_geometry(herds))
 
-# take the centroids
-rez.nodes <- st_centroid(rez)
-nps.nodes <- st_centroid(yellowstone)
-# need to do some work to get this to have the right column names to combine them into one shapefile
-apr <- st_combine(lg.apr)
-apr.nodes <- st_centroid(apr) %>% 
-  st_as_sf %>% 
-  rename(geometry = x) 
-apr.nodes$NAME <-  seq(1, nrow(apr.nodes)) %>% 
-  as.character(.) %>% 
-  rename(apr.nodes$NAME==1)
-apr.nodes[apr.nodes$NAME==1, "NAME"] <- "American Prairie Reserve"
 
-#combine centroids into one shapefile
-all.nodes <- bind_rows(rez.nodes, apr.nodes, nps.nodes) 
-all.nodes[8,1] <- "American Prairie Reserve"
+st_write(herds, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
+
+# take the centroid
+herds_cent <- st_centroid(herds)
+plot(st_geometry(herds_cent))
+
+herds_cent$ID <- seq(1, nrow(herds_cent))
+all.nodes <- herds_cent %>% st_buffer(., 10000) # buffer of 10 km         
 plot(all.nodes)
-plot(st_geometry(all.nodes))
-plot(st_geometry(herds_shapefiles), add = TRUE)
-
-all.nodes$ID <- seq(1, nrow(all.nodes))
-all.nodes <- all.nodes %>% st_buffer(., 10000) # buffer of 10 km         
-plot(all.nodes)
-st_write(all.nodes, "data/processed/all_nodes_correct.shp", delete_layer=TRUE )
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
 writeRaster(node.rast, "data/processed/all_nodes.tif", overwrite = TRUE)
+
 
