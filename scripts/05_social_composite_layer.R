@@ -28,7 +28,7 @@ rc5.1m <- 1-parceldensity
 fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc5.1m)
 plot(fuz.sum) 
 
-writeRaster(fuz.sum, "data/raster_layers/social_composite_layer.tif", overwrite = TRUE)
+writeRaster(fuz.sum, "data/processed/social_fuzsum.tif")
 social_resistance <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(social_resistance)
 plot(st_geometry(herds), add= TRUE)
