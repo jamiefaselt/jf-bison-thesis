@@ -13,15 +13,28 @@ source(here::here("scripts/11_fun_K_mst.R"))
 
 
 # Load the data -----------------------------------------------------------
-
-biophys.tr <- readRDS("data/processed/TransitionLayers/biophystrans.rds")
+implementation.resist1 <- raster("data/raster_layers/social_composite_layer.tif")
+implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implementation.resist1, max)## drop NAs for costodistance
 biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
+biophys.resist[is.na(biophys.resist[])] <- 5* cellStats(biophys.resist, max)## drop NAs for costodistance
+
+
 pts <- st_read("data/processed/herd_centroids.shp") %>% 
-  st_centroid %>% 
+  st_transform(. , crs(biophys.resist))  %>% 
+  st_centroid(.) %>% 
   as(. , "Spatial")
 
-tr <- biophys.tr
-resist <- biophys.resist
+
+# Create Transition Matrix ------------------------------------------------
+biophys.tr <- transition(1/biophys.resist, transitionFunction = mean, 16)
+biophys.tr <- geoCorrection(biophys.tr, "c")
+saveRDS(biophys.tr, here::here('data/Processed/TransitionLayers/biophystrans.rds'))
+
+social.tr1 <- transition(1/implementation.resist1, transitionFunction = mean, 16)
+social.tr1 <- geoCorrection(social.tr1, "c")
+saveRDS(social.tr1, here::here('data/Processed/TransitionLayers/socialtrans1.rds'))
+
+
 
 # get k top tree ----------------------------------------------------------
 
