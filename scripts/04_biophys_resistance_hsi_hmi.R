@@ -34,8 +34,6 @@ plot(hsi.resample, colNA="red")
 # fix the max value here
 hsi.resample[hsi.resample>73] <- NA
 hsi.resample
-hsi.mask <- mask(hsi.resample, r)
-plot(hsi.mask)
 writeRaster(hsi.resample, "data/processed/hsi_resample.tif") 
 
 # take the inverse of habitat suitability for resistance
@@ -43,7 +41,6 @@ hsi.resample <- raster("data/processed/hsi_resample.tif")
 plot(hsi.resample)
 plot(st_geometry(herds), add = TRUE)
 hsi.inverse <- 1/hsi.resample
-hsi.mask
 plot(hsi.inverse)
 table(is.na(hsi.resample[]))
 plot(hsi.resample, colNA="red")
@@ -70,9 +67,8 @@ plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance La
 
 # make into resistance surface
 biophys_resistance <- (1+biophys_fuzsum)^10
-plot(biophys_mask, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
-
 biophys_mask <- mask(biophys_resistance, r)
+plot(biophys_mask, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 
 #write raster (saving both gdrive and local computer)
 writeRaster(biophys_mask, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)

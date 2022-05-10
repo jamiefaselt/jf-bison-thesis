@@ -116,6 +116,14 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/circuitscape_outputs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
+# above wasn't working and i just neeeded the updated biophys layer for now
+folder_url <- "https://drive.google.com/drive/u/0/folders/1FsWGSTeabEgbo7IVkkVk_TeuZgxLy0xb" # cs outputs temp solution
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/circuitscape_outputs/biophys_resistance_layer/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
 
 # APR Shapefile -----------------------------------------------------------
 folder_url <- "https://drive.google.com/drive/u/0/folders/13QUtUL7MKKQ_ap9kD2193ePyXDBBnVLA" # APR shapefiles from APR staff

@@ -170,7 +170,7 @@ origin.proj <- spTransform(origins, crs(biophys.cs))
 goals.proj <- spTransform(goals, crs(biophys.cs))
 # Get vectors for maps ----------------------------------------------------
 
-PAs <- st_read(here::here("data/processed/herd_shapefile.shp")) #%>% 
+PAs <- st_read(here::here("data/processed/herd_shapefile_outline.shp")) #%>% 
  # dplyr::filter(. , Unit_Nm == "Yellowstone National Park" | Unit_Nm == "Weminuche Wilderness") %>% 
 #  st_transform(. , crs = crs(biophys.cs))
 
