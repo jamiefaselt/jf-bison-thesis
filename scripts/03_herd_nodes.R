@@ -59,6 +59,9 @@ herds_cent <- st_centroid(herds)
 plot(st_geometry(herds_cent))
 
 herds_cent$ID <- seq(1, nrow(herds_cent))
+new_herd <- subset(herds_cent, select = c(NAME, geometry, ID))
+st_write(new_herd,"data/processed/herd_centroids.shp")
+
 all.nodes <- herds_cent %>% st_buffer(., 10000) # buffer of 10 km         
 plot(all.nodes)
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
