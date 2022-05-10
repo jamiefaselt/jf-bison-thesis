@@ -4,8 +4,32 @@ library(yenpathy)
 library(rgdal)
 library(sf)
 library(magrittr)
+library(matrixStats)
+
+
+# download data -----------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/16bUzSKoT75gAnue0p1gaXXtD3S6psOAi" # temp data for herd centroids and biophys resistance layer
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+#have to treat the gdb as a folder and download it into a gdb directory in order to deal with the fact that gdb is multiple, linked files
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/temp/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+
+
+resist <- raster("data/temp/biophys_resistance_layer.tif")
+resist[is.na(resist[])] <- 5* cellStats(resist, max)## drop NAs for costodistance
+tr <- transition(1/resist, transitionFunction = mean, 16)
+tr <- geoCorrection(tr, "c")
+
+numpath <- 3
+bufdist <- 4000
+pts <- st_read("data/temp/herd_centroids.shp") %>% 
+  st_transform(. , crs(resist))  %>% 
+  st_centroid(.) %>% 
+  as(. , "Spatial")
 
 gen_top_tree <- function(tr, resist,  numpath, bufdist, pts){
+  
   combos <- expand.grid(1:nrow(pts), 1:nrow(pts))
   #remove self connections
   keep <- apply(combos[1:2], 1, function(x) length(unique(x[!is.na(x)])) != 1)
@@ -20,7 +44,8 @@ gen_top_tree <- function(tr, resist,  numpath, bufdist, pts){
   
   for(z in 1:numpath){
     if(z == 1){
-      y <- transitionMatrix(tr)
+  z <- 1
+          y <- transitionMatrix(tr)
       if(isSymmetric(y)) {
         mode <- "undirected"
       }else{
@@ -45,7 +70,8 @@ gen_top_tree <- function(tr, resist,  numpath, bufdist, pts){
         sPVector <- path.list[[i]]
         adj <- cbind(sPVector[-(length(sPVector))], sPVector[-1])
         adj <- rbind(adj,cbind(adj[,2], adj[,1]))
-        transitionMatrix(result)[adj] <- 1/length(path.list) + transitionMatrix(result)[adj]}
+        transitionMatrix(result)[adj] <- 1/length(path.list) + transitionMatrix(result)[adj]
+        }
       result.rast <- raster(result)
       result.buf <- raster::buffer(result.rast, width = bufdist, doEdge=TRUE)
       result.list[[z]] <- result.buf
@@ -79,7 +105,8 @@ gen_top_tree <- function(tr, resist,  numpath, bufdist, pts){
         sPVector <- path.list[[i]]
         adj <- cbind(sPVector[-(length(sPVector))], sPVector[-1])
         adj <- rbind(adj,cbind(adj[,2], adj[,1]))
-        transitionMatrix(result)[adj] <- 1/length(path.list) + transitionMatrix(result)[adj]}
+        transitionMatrix(result)[adj] <- 1/length(path.list) + transitionMatrix(result)[adj]
+        }
       result.rast <- raster(result)
       result.buf <- raster::buffer(result.rast, width = bufdist, doEdge=TRUE)
       result.list[[z]] <- result.buf
