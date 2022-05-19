@@ -150,7 +150,7 @@ p.cs1
         plot.background = element_rect(fill = NA, color = NA))  
 
 
-p.combined <- ggdraw(p.cs) +
+p.combined <- ggdraw(p.cs1) +
   draw_plot(inset, x = 0.33, y = 0,  
             width = 0.3, height = 0.15)
 

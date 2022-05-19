@@ -51,6 +51,8 @@ yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
 herds <- bind_rows(mt_reservations, apr, yellowstone) 
 plot(st_geometry(herds))
 
+herds <- subset(herds, select = c(NAME, geometry))
+
 
 st_write(herds, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
 

@@ -11,7 +11,7 @@ library(ggmap)
 library(rgdal)
 library(maptools)
 
-herds <- st_read("data/processed/herd_shapefile_outline.shp")
+herds <- st_read("data/processed/all_nodes.tif")
 
 #to compare later
 social.composite <- raster("data/raster_layers/social_composite_layer.tif") #or?
@@ -41,7 +41,7 @@ plot(fuz.sum)
 econ.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(econ.scenario)
 plot(st_geometry(herds), add= TRUE)
-writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
+writeRaster(econ.scenario, "data/raster_layers/econ_scenario_rl.tif", overwrite = TRUE)
 
 
 # Tribal Governance Scenario ----------------------------------------------

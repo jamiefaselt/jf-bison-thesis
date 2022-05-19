@@ -23,15 +23,16 @@ implementation.resist1 <- raster(here::here("data/raster_layers/social_resistanc
 implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implementation.resist1, max)## drop NAs for costodistance
 
 # Load centroids ----------------------------------------------------------
-origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+origins <- st_read(here::here("data/processed/herd_centroids.shp")) %>% 
+  dplyr::filter(., NAME == "Yellowstone National Park") %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
-goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+goals <- st_read(here::here("data/processed/herd_centroids.shp")) 
+goals <- goals[-9,] %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
 origin.proj <- spTransform(origins, crs(biophys.resist))
 goals.proj <- spTransform(goals, crs(biophys.resist))
-
 
 # Load k cost paths -------------------------------------------------------
 
