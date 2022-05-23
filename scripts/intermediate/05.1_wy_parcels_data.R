@@ -71,8 +71,9 @@ head(wy.parcl.dens)
 wy.parcl.dens <- st_as_sf(wy.parcl.dens)  
 wy.parcl.dens.rast<-fasterize::fasterize(wy.parcl.dens, r, field = 'parceldensity')
 plot(wy.parcl.dens.rast)
-writeRaster(wy.parcl.dens.rast, "data/processed/wy_parcel_density.tif")
+writeRaster(wy.parcl.dens.rast, "data/processed/wy_parcel_density.tif", overwrite = TRUE)
 
+# currently not using size ratio so can stop here
 ##### Size Ratio #####
 colnames(wy.parcels)
 wy.parcels <- rename(wy.parcels, TotalParcels= parcelnb)

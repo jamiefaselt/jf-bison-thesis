@@ -20,20 +20,18 @@ r <- raster("data/template_raster.tif")
 cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
 r <- raster("data/template_raster.tif") %>% 
   mask(., cattle)
-herds <- st_read("data/processed/herd_shapefile.shp")
+herds <- st_read("data/processed/herd_shapefile_outline.shp")
 # resample the hsi layer to match the extent and resolution of template raster
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi.resample <- resample(hsi, r)
 plot(hsi.resample)
 table(is.na(hsi.resample[]))
 plot(hsi.resample, colNA="red")
-#writeRaster(hsi.resample, "data/processed/hsi_resample_wrongmax.tif", overwrite = TRUE)
-#write this for future use so I won't have to resample again!
-
 # according to Brent (creater of hsi layer) the max value should be 73 NOT 128
 # fix the max value here
 hsi.resample[hsi.resample>73] <- NA
 hsi.resample
+#write this for future use so I won't have to resample again!
 writeRaster(hsi.resample, "data/processed/hsi_resample.tif") 
 
 # take the inverse of habitat suitability for resistance
@@ -53,6 +51,17 @@ hsi.rescale
 plot(hsi.rescale, col=plasma(256), axes = TRUE, main = "Habitat Suitability Resistance Layer")
 
 # bring in the human modification layer
+r <- rast("data/template_raster.tif")
+hmi <- rast("data/original/Human_Modification_Index/prj.adf")
+hmi.crop <- project(hmi, r)
+plot(hmi.crop)
+hmi.resample <- resample(hmi.crop,r)
+plot(hmi.resample)
+ext(hmi.resample)
+ext(r)
+st_crs(r)==st_crs(hmi.resample)
+writeRaster(hmi.resample, "data/processed/hmi.crop.tif", overwrite = TRUE)
+
 hmi <- raster("data/processed/hmi.crop.tif")
 plot(hmi, col=plasma(256), axes = TRUE, main = "Human Modification Layer")
 

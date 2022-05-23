@@ -13,6 +13,11 @@ library(ggmap)
 library(usmap)
 library(fasterize)
 
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
+
+
 # bring in hsi and temp raster
 r <- raster("data/template_raster.tif")
 hsi <- raster("data/processed/hsi_resample.tif")

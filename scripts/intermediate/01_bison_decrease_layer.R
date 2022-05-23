@@ -11,7 +11,7 @@ library(rgdal)
 #template raster
 r <- raster("data/template_raster.tif")
 
-#bison increase preference from Kate's model
+#bison increase preference from Kate's model (made in the wildlife.gov repo)
 bis.inc <- raster("data/raster_Layers/bis_inc.tif") 
 plot(bis.inc)
 bis.inc 

@@ -1,5 +1,5 @@
 # composite social layer
-# just once need to run all files in intermediate script folder
+
 
 library(raster)
 library(terra)
@@ -12,6 +12,10 @@ library(maptools)
 herds <- st_read("data/processed/herd_shapefile_outline.shp")
 
 r <- raster("data/template_raster.tif")
+
+
+# Need to run scripts in scripts/intermediate folder once -----------------
+
 bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") 
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
@@ -51,4 +55,4 @@ cellStats(s, min)
 r <- setMinMax(r)
 values(r) <- 160.084
 
-writeRaster(r, "data/processed/null_resistance_layer.tif")
+writeRaster(r, "data/processed/null_resistance_layer.tif", overwrite = TRUE)

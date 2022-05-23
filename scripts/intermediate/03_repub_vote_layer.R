@@ -10,6 +10,11 @@ library(rgdal)
 library(raster)
 library(dplyr)
 
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
+
+
 votes2000.2020 <- read_csv("data/original/countypres_2000-2020.csv")
 colnames(votes2000.2020)
 head(votes2000.2020)
@@ -60,7 +65,7 @@ mtwy.republican <- merge(mt.rep.avg.rast, wy.rep.avg.rast)
 plot(mtwy.republican)
 rescale <- rescale01(mtwy.republican)
 plot(rescale)
-writeRaster(rescale, "data/raster_layers/repub_vote_layer.tif")
+writeRaster(rescale, "data/raster_layers/repub_vote_layer.tif", overwrite = TRUE)
 ##############################################################################
 #let's see if 2020 is different than the average 
 wy.2020 <- votes.wy %>% filter(year %in% c("2020"))
@@ -87,7 +92,7 @@ plot(mt.diff)
 
 
 
-##############################################
+############################################## ignore below
 # curious to loook at us as a whole
 states <- tigris::states()
 #<-terra::rast( xmin=-6500000, xmax= 3500000, ymin=-3000000, ymax=5000000,crs='ESRI:102008', resolution=5000, vals=0)

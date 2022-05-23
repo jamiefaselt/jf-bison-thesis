@@ -10,6 +10,11 @@ library(terra)
 library(dplyr)
 library(rgdal)
 
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
+
+
 # bring in hsi and temp raster
 r <- raster("data/template_raster.tif")
 #bring in counties
@@ -66,16 +71,16 @@ mt.pd <- rescale01(mt.pd.rast)
 plot(mt.pd)
 ###############################################################################
 
-# wyoming parcel data
+# wyoming parcel data run 05.5_wy_parcels_data.R script and keep in environment
 wy.parcl.rast <- raster("data/processed/wy_parcel_density.tif")
 plot(wy.parcl.rast)
 wy.pd <- rescale01(wy.parcl.rast)
 mtwy.pd <- merge(mt.pd, wy.pd)
 plot(mtwy.pd)
-writeRaster(mtwy.pd, "data/raster_layers/parcel_density_layer.tif")
+writeRaster(mtwy.pd, "data/raster_layers/parcel_density_layer.tif", overwrite = TRUE)
 
 
-##############
+############## need to keep the wyoming script run for the objects to work below (did not want to save each individiaully before the merge)
 
 parcl.jn <- st_drop_geometry(mt.parcels)%>% 
   left_join(., pa.cty.area, by = c("CountyName"= "NAME")) %>% 
