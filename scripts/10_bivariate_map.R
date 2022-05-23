@@ -158,11 +158,11 @@ hill2 <- aggregate(hill , fact = 5 , method = "bilinear" )
 hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
 
 # Load centroids ----------------------------------------------------------
-origins <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+origins <- st_read(here::here("data/processed/herd_centroids.shp")) %>% 
   st_centroid(.) %>% 
  # dplyr::filter(., Unit_Nm == "Weminuche Wilderness") %>% 
   as(. , "Spatial")
-goals <- st_read(here::here("data/processed/all_nodes_correct.shp")) %>% 
+goals <- st_read(here::here("data/processed/herd_centroids.shp")) %>% 
   st_centroid(.) %>% 
  # dplyr::filter(., Unit_Nm == "Yellowstone National Park") %>% 
   as(. , "Spatial")
