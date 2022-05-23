@@ -1,2 +1,4 @@
-
-/countypres_2000-2020.csv
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
