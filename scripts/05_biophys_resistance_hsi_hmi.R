@@ -11,28 +11,32 @@ library(rgdal)
 library(maptools)
 library(viridis)
 
+# rescale function to use later on for combining rasters
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
 
 #template raster
 r <- raster("data/template_raster.tif")
-cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
+cattle <- raster("data/raster_layers/cattle_sales_layer.tif") # using this as my mask since it has data for the area
 r <- raster("data/template_raster.tif") %>% 
   mask(., cattle)
 herds <- st_read("data/processed/herd_shapefile_outline.shp")
 # resample the hsi layer to match the extent and resolution of template raster
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
-hsi.resample <- resample(hsi, r)
+hsi # it says the max is 73 but the histogram shows that there are values over 100, Brock thinks this is from converting the file from ArcGIS
+# hist(hsi) this takes a while but shows how there are a ton of values around 128
+hsi.resample <- crop(hsi, r, na.rm = TRUE) 
+hsi.resample # something happens where the max is now 128
 plot(hsi.resample)
-table(is.na(hsi.resample[]))
+#table(is.na(hsi.resample[]))
 plot(hsi.resample, colNA="red")
 # according to Brent (creater of hsi layer) the max value should be 73 NOT 128
 # fix the max value here
 hsi.resample[hsi.resample>73] <- NA
-hsi.resample
+hsi.resample 
 #write this for future use so I won't have to resample again!
-writeRaster(hsi.resample, "data/processed/hsi_resample.tif") 
+writeRaster(hsi.resample, "data/processed/hsi_resample.tif", overwrite = TRUE) 
 
 # take the inverse of habitat suitability for resistance
 hsi.resample <- raster("data/processed/hsi_resample.tif")
