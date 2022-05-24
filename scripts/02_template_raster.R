@@ -49,12 +49,15 @@ all.nodes <- bind_rows(reservations, cmr, yellowstone)
 class(all.nodes)
 plot(st_geometry(all.nodes)) # looks good
 
-#create a bounding box and buffer 50km to the south
+#create a bounding box and buffer 50km to the south to include area around the YNP herd
 ext <- st_bbox(all.nodes)
 poly <- st_as_sfc(st_bbox(c(xmin = st_bbox(mt)[[1]], xmax = st_bbox(mt)[[3]], ymax = st_bbox(mt)[[4]], ymin = st_bbox(all.nodes)[[2]]-50000), crs = st_crs(hsi)))
 r <- raster(crs= proj4string(as(poly, "Spatial")), ext=raster::extent(as(poly, "Spatial")), resolution= 540)
 extent(r)
 extent(st_bbox(all.nodes))
+
+# add values
+values(r) <- 1:ncell(r)
 
 # save the template raster
 writeRaster(r, "data/template_raster.tif", overwrite = TRUE)
