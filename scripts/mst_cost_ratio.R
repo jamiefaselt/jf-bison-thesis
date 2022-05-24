@@ -18,6 +18,7 @@ library(egg)
 # Load the data -----------------------------------------------------------
 d <- readRDS("data/processed/TransitionLayers/ms_tree.rds")
 biophys.tr <- readRDS("data/processed/TransitionLayers/biophystrans.rds")
+social.tr1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtrans1.rds'))
 pts <- st_read("data/processed/herd_centroids.shp") %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
@@ -120,3 +121,48 @@ barplot(df$social.mean, main = "Mean Social Cost", col = colors)
 plot(df$ratio, main = "Cost Ratio", col = colors)
 
 
+origin.proj <- st_read(here::here("data/processed/herd_centroids.shp")) %>% 
+  dplyr::filter(., NAME == "Yellowstone National Park") %>% 
+  st_centroid(.) %>% 
+  as(. , "Spatial")
+goals.proj <- st_read(here::here("data/processed/herd_centroids.shp")) 
+goals.proj <- goals[-9,] %>% 
+  st_centroid(.) %>% 
+  as(. , "Spatial")
+
+# trying to calculate the distance
+p1 <- bio.cost.list[[1]]
+p2 <- bio.cost.list[[2]]
+p3 <- bio.cost.list[[3]]
+euclidean.resist <- p1
+values(euclidean.resist) <- 1
+euclidean.tr <- transition(1/euclidean.resist, transitionFunction = mean, 16)
+euclidean.tr <- geoCorrection(euclidean.tr, "c")
+eucdist <- accCost(euclidean.tr, origin.proj)
+eucdist
+
+euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
+units(euc.dist) <- NULL
+euc.dist
+
+euclidean.resist2 <- p2
+values(euclidean.resist2) <- 1
+euclidean.tr2 <- transition(1/euclidean.resist2, transitionFunction = mean, 16)
+euclidean.tr2 <- geoCorrection(euclidean.tr2, "c")
+eucdist2 <- accCost(euclidean.tr2, origin.proj)
+
+eucdist2
+euc.dist2 <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
+units(euc.dist2) <- NULL
+euc.dist2
+
+euclidean.resist3<- p3
+values(euclidean.resist3) <- 1
+euclidean.tr3 <- transition(1/euclidean.resist3, transitionFunction = mean, 16)
+euclidean.tr3 <- geoCorrection(euclidean.tr3, "c")
+eucdist3 <- accCost(euclidean.tr3, origin.proj)
+
+#extract values for last 50km
+euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
+units(euc.dist) <- NULL
+euc.dist
