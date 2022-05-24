@@ -26,15 +26,15 @@ pts <- st_read("data/processed/herd_centroids.shp") %>%
 
 
 # Create or load Transition Matrix ------------------------------------------------
-biophys.tr <- readRDS("data/processed/TransitionLayers/biophystrans.rds")
-#biophys.tr <- transition(1/biophys.resist, transitionFunction = mean, 16)
-#biophys.tr <- geoCorrection(biophys.tr, "c")
-#saveRDS(biophys.tr, here::here('data/Processed/TransitionLayers/biophystrans.rds'))
+#biophys.tr <- readRDS("data/processed/TransitionLayers/biophystrans.rds")
+biophys.tr <- transition(1/biophys.resist, transitionFunction = mean, 16)
+biophys.tr <- geoCorrection(biophys.tr, "c")
+saveRDS(biophys.tr, here::here('data/Processed/TransitionLayers/biophystrans.rds'))
 
-social.tr1 <- readRDS("data/processed/TransitionLayers/socialtrans1.rds")
-#social.tr1 <- transition(1/implementation.resist1, transitionFunction = mean, 16)
-#social.tr1 <- geoCorrection(social.tr1, "c")
-#saveRDS(social.tr1, here::here('data/Processed/TransitionLayers/socialtrans1.rds'))
+#social.tr1 <- readRDS("data/processed/TransitionLayers/socialtrans1.rds")
+social.tr1 <- transition(1/implementation.resist1, transitionFunction = mean, 16)
+social.tr1 <- geoCorrection(social.tr1, "c")
+saveRDS(social.tr1, here::here('data/Processed/TransitionLayers/socialtrans1.rds'))
 
 
 # get k top tree ----------------------------------------------------------

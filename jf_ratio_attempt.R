@@ -31,14 +31,19 @@ social1.lst <- social1[[1]]
 #social2.lst <- social2[[1]]
 
 path1 <- biophys.lst[[1]] %>% 
-  rasterToPolygons(., na.rm = TRUE)
-plot(path1)
+  rasterToPolygons(., na.rm = TRUE, dissolve=TRUE) %>% 
+  st_as_sf(.)
+path1.area <- st_area(path1)/4000
+
 path2<- biophys.lst[[2]] %>% 
-  rasterToPolygons(., na.rm = TRUE)
-plot(path2)
+  rasterToPolygons(., na.rm = TRUE, dissolve = TRUE) %>% 
+  st_as_sf(.)
+path2.area <- st_area(path2)/4000
+
 path3 <- biophys.lst[[3]] %>% 
-  rasterToPolygons(., na.rm = TRUE)
-plot(path3)
+  rasterToPolygons(., na.rm = TRUE, dissolve = TRUE) %>% 
+  st_as_sf(.)
+path3.area <- st_area(path3)/4000
 
 
 # social extract ----------------------------------------------------------

@@ -14,6 +14,25 @@ library(ggsci)
 library(stringr)
 library(egg)
 
+# Calculate the length of each LCC ----------------------------------------
+
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/ms_tree.rds'))
+biophys.lst <- biophys[[1]]
+
+path1 <- biophys.lst[[1]] %>% 
+  rasterToPolygons(., na.rm = TRUE, dissolve=TRUE) %>% 
+  st_as_sf(.)
+path1.area <- st_area(path1)/4000
+
+path2<- biophys.lst[[2]] %>% 
+  rasterToPolygons(., na.rm = TRUE, dissolve = TRUE) %>% 
+  st_as_sf(.)
+path2.area <- st_area(path2)/4000
+
+path3 <- biophys.lst[[3]] %>% 
+  rasterToPolygons(., na.rm = TRUE, dissolve = TRUE) %>% 
+  st_as_sf(.)
+path3.area <- st_area(path3)/4000
 
 # Load the data -----------------------------------------------------------
 d <- readRDS("data/processed/TransitionLayers/ms_tree.rds")
@@ -46,7 +65,6 @@ mst1.max <- cellStats(mst1, max, na.rm = TRUE)
 mst1.mean <- cellStats(mst1, mean, na.rm = TRUE)
 hist(mst1)
 quant.mst1 <- quantile(mst1)
-dist.mst1 <- distance(mst1)
 
 mst2 <- bio.cost.list[[2]]
 mst2[is.infinite(mst2)] <- NA
@@ -56,7 +74,7 @@ mst2.mean <- cellStats(mst2, mean, na.rm = TRUE)
 hist(mst2)
 quant.mst2 <- quantile(mst2)
 
-mst3 <- cost.list[[3]]
+mst3 <- bio.cost.list[[3]]
 mst3[is.infinite(mst3)] <- NA
 mst3.sum <- cellStats(mst3, sum, na.rm = TRUE)
 mst3.max <- cellStats(mst3, max, na.rm = TRUE)
@@ -90,16 +108,35 @@ hist(social.mst3)
 quant.soc.mst3 <- quantile(social.mst3)
 
 df <- data.frame (label = c(1, 2, 3),
-                  biophys.sum = c(mst1.sum, mst2.sum, mst3.sum),
-                  social.sum = c(social.mst1.sum, social.mst2.sum, social.mst3.sum),
+                  biophys.cost.km = c(mst1.sum/(path1.area/1000), mst2.sum/(path2.area/1000), mst3.sum/(path3.area/1000)),
+                  social.cost.km = c(social.mst1.sum/(path1.area/1000), social.mst2.sum/(path2.area/1000), social.mst3.sum/(path3.area/1000)),
                   biophys.max =c(mst1.max, mst2.max, mst2.mean),
                   social.max = c(social.mst1.max, social.mst2.max, social.mst3.max),
                   biophys.mean = c(mst1.mean, mst2.mean, mst3.mean),
-                  social.mean = c(social.mst1.mean, social.mst2.mean, social.mst3.mean)
+                  social.mean = c(social.mst1.mean, social.mst2.mean, social.mst3.mean),
+                  distance = c(path1.area/1000, path2.area/1000, path3.area/1000)
 )
 
-df <- df %>% mutate(ratio= social.sum/biophys.sum)
-df                  
+units(df$biophys.cost.km) <- NULL
+units(df$social.cost.km) <- NULL
+units(df$distance) <- NULL
+df <- df %>% mutate(ratio= social.cost.km/biophys.cost.km)
+df      
+
+
+par(mfrow = c(2, 2))
+colors = c("#990000","#FF6633", "#336300")
+
+barplot(df$biophys.cost.km, main = "Biophys Cost Total / km", col = colors)
+barplot(df$social.cost.km, main = "Social Cost Total / km", col = colors)
+barplot(df$distance, main = "Distance (km)", col = colors)
+plot(df$ratio, main = "Cost Ratio", col = colors)
+barplot(df$biophys.max, main = "Max Biophys Cost", col = colors)
+barplot(df$social.max, main = "Max Social Cost", col = colors)
+barplot(df$biophys.mean, main = "Mean Biophys Cost", col = colors)
+barplot(df$social.mean, main = "Mean Social Cost", col = colors)
+
+
 
 quantiles <- data.frame(quant.mst1 = c(quant.mst1),
                         quant.mst2 = c(quant.mst2),
@@ -108,61 +145,3 @@ quantiles <- data.frame(quant.mst1 = c(quant.mst1),
                         quant.soc.mst2 = c(quant.soc.mst2),
                         quant.soc.mst3 = c(quant.soc.mst3))
 
-
-par(mfrow = c(3, 2))
-colors = c("#990000","#FF6633", "#336300")
-
-barplot(df$biophys.sum, main = "Sum Biophys Cost", col = colors)
-barplot(df$social.sum, main = "Sum Social Cost", col = colors)
-barplot(df$biophys.max, main = "Max Biophys Cost", col = colors)
-barplot(df$social.max, main = "Max Social Cost", col = colors)
-barplot(df$biophys.mean, main = "Mean Biophys Cost", col = colors)
-barplot(df$social.mean, main = "Mean Social Cost", col = colors)
-plot(df$ratio, main = "Cost Ratio", col = colors)
-
-
-origin.proj <- st_read(here::here("data/processed/herd_centroids.shp")) %>% 
-  dplyr::filter(., NAME == "Yellowstone National Park") %>% 
-  st_centroid(.) %>% 
-  as(. , "Spatial")
-goals.proj <- st_read(here::here("data/processed/herd_centroids.shp")) 
-goals.proj <- goals[-9,] %>% 
-  st_centroid(.) %>% 
-  as(. , "Spatial")
-
-# trying to calculate the distance
-p1 <- bio.cost.list[[1]]
-p2 <- bio.cost.list[[2]]
-p3 <- bio.cost.list[[3]]
-euclidean.resist <- p1
-values(euclidean.resist) <- 1
-euclidean.tr <- transition(1/euclidean.resist, transitionFunction = mean, 16)
-euclidean.tr <- geoCorrection(euclidean.tr, "c")
-eucdist <- accCost(euclidean.tr, origin.proj)
-eucdist
-
-euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
-units(euc.dist) <- NULL
-euc.dist
-
-euclidean.resist2 <- p2
-values(euclidean.resist2) <- 1
-euclidean.tr2 <- transition(1/euclidean.resist2, transitionFunction = mean, 16)
-euclidean.tr2 <- geoCorrection(euclidean.tr2, "c")
-eucdist2 <- accCost(euclidean.tr2, origin.proj)
-
-eucdist2
-euc.dist2 <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
-units(euc.dist2) <- NULL
-euc.dist2
-
-euclidean.resist3<- p3
-values(euclidean.resist3) <- 1
-euclidean.tr3 <- transition(1/euclidean.resist3, transitionFunction = mean, 16)
-euclidean.tr3 <- geoCorrection(euclidean.tr3, "c")
-eucdist3 <- accCost(euclidean.tr3, origin.proj)
-
-#extract values for last 50km
-euc.dist <- st_distance(as(origin.proj, "sf"), as(goals.proj, "sf"))
-units(euc.dist) <- NULL
-euc.dist
