@@ -26,7 +26,7 @@ herds <- st_read("data/processed/herd_shapefile_outline.shp")
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi # it says the max is 73 but the histogram shows that there are values over 100, Brock thinks this is from converting the file from ArcGIS
 # hist(hsi) this takes a while but shows how there are a ton of values around 128
-hsi.resample <- crop(hsi, r, na.rm = TRUE) 
+hsi.resample <- resample(hsi, r, na.rm = TRUE) 
 hsi.resample # something happens where the max is now 128
 plot(hsi.resample)
 #table(is.na(hsi.resample[]))
@@ -55,7 +55,6 @@ hsi.rescale
 plot(hsi.rescale, col=plasma(256), axes = TRUE, main = "Habitat Suitability Resistance Layer")
 
 # bring in the human modification layer
-r <- rast("data/template_raster.tif")
 hmi <- rast("data/original/Human_Modification_Index/prj.adf")
 hmi.crop <- project(hmi, r)
 plot(hmi.crop)
@@ -66,7 +65,7 @@ ext(r)
 st_crs(r)==st_crs(hmi.resample)
 writeRaster(hmi.resample, "data/processed/hmi.crop.tif", overwrite = TRUE)
 
-hmi <- raster("data/processed/hmi.crop.tif")
+hmi <- raster::raster("data/processed/hmi.crop.tif")
 plot(hmi, col=plasma(256), axes = TRUE, main = "Human Modification Layer")
 
 # fuzzy sum approach to combine them from Theobald 2013
