@@ -9,7 +9,7 @@ library(matrixStats)
 # Load top paths function -------------------------------------------------
 
 
-source(here::here("scripts/11_fun_K_mst.R"))
+source(here::here("scripts/07_fun_K_mst.R"))
 
 
 # Load the data -----------------------------------------------------------
@@ -35,7 +35,6 @@ social.tr1 <- readRDS("data/processed/TransitionLayers/socialtrans1.rds")
 #social.tr1 <- transition(1/implementation.resist1, transitionFunction = mean, 16)
 #social.tr1 <- geoCorrection(social.tr1, "c")
 #saveRDS(social.tr1, here::here('data/Processed/TransitionLayers/socialtrans1.rds'))
-social.tr1 <- readRDS("data/processed/TransitionLayers/socialtrans1.rds")
 
 
 # get k top tree ----------------------------------------------------------

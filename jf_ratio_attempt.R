@@ -24,20 +24,21 @@ implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implemen
 
 social1 <- readRDS(here::here('Data/Processed/TransitionLayers/social_ms_tree.rds'))
 biophys <- readRDS(here::here('Data/Processed/TransitionLayers/ms_tree.rds'))
-biophys.lst <- ms_tree_nobuf[[1]]
-path1 <- biophys.lst[[1]]
+biophys.lst <- biophys[[1]]
 
 
 social1.lst <- social1[[1]]
 #social2.lst <- social2[[1]]
-biophys.lst <- biophys[[1]]
 
 path1 <- biophys.lst[[1]] %>% 
   rasterToPolygons(., na.rm = TRUE)
+plot(path1)
 path2<- biophys.lst[[2]] %>% 
   rasterToPolygons(., na.rm = TRUE)
+plot(path2)
 path3 <- biophys.lst[[3]] %>% 
   rasterToPolygons(., na.rm = TRUE)
+plot(path3)
 
 
 # social extract ----------------------------------------------------------
@@ -68,8 +69,8 @@ bio3.acc <- sum(df3$matrix.unlist.bio3.extract...nrow...length.bio3.extract...by
 
 # calculate the distance
 
-d <- readRDS("data/processed/TransitionLayers/ms_tree_nobuf.rds")
-plot(ms_tree_nobuf)
+d <- readRDS("data/processed/TransitionLayers/ms_tree.rds")
+plot(ms_tree)
 
 mst_cost <- function(pathset, basetr, startpt){
   mn_func <- function(x){mean(x, na.rm=TRUE)}
@@ -78,16 +79,16 @@ mst_cost <- function(pathset, basetr, startpt){
   acost <- accCost(cost.trans, pts[pts@data$NAME == startpt,])
 }
 
-bio.cost.list <- lapply(1:length(ms_tree_nobuf[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], basetr = biophys.tr, startpt = "Yellowstone National Park"))
+bio.cost.list <- lapply(1:length(ms_tree[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], basetr = biophys.tr, startpt = "Yellowstone National Park"))
 
 path1.dist <- bio.cost.list[[1]] %>% 
-  rasterToPolygons(., na.rm = TRUE) %>% 
+  rasterToPolygons(., na.rm = TRUE)# %>% 
   st_as_sf(.) #%>% 
   #st_length(.)
-dist1 <- st_length(path1.dist)
+dist1 <- distance(path1.dist)
 
 path2.dist <- bio.cost.list[[2]] %>% 
-  rasterToPolygons(., na.rm = TRUE) %>% 
+  rasterToPolygons(., na.rm = TRUE) #%>% 
   st_as_sf(.) #%>% 
  # st_length(.)
 dist2 <- st_length(path2.dist)
