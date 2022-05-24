@@ -29,7 +29,7 @@ apr <- st_read("data/original/AP_Property_Boundaries_011022/doc.kml") %>%
 apr$area <- st_area(apr) %>% 
   as.numeric(.)
 
-#trying to get this centroid to be in the middle of the three locations that have bison... but don't have the names on the dataframe
+# cutting out parts of reserve that are too small (the actual herd locations are in the large tracts)
 lg.apr <- apr %>% 
   filter(., area > 20000000)
 lg.apr<-lg.apr[!(lg.apr$Name=="73 Ranch"),]
