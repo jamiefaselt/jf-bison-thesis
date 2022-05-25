@@ -25,10 +25,10 @@ implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implemen
 social1 <- readRDS(here::here('Data/Processed/TransitionLayers/social_ms_tree.rds'))
 biophys <- readRDS(here::here('Data/Processed/TransitionLayers/ms_tree.rds'))
 biophys.lst <- biophys[[1]]
+# Calculate the length of each LCC ----------------------------------------
 
-
-social1.lst <- social1[[1]]
-#social2.lst <- social2[[1]]
+biophys <- readRDS(here::here('Data/Processed/TransitionLayers/ms_tree.rds'))
+biophys.lst <- biophys[[1]]
 
 path1 <- biophys.lst[[1]] %>% 
   rasterToPolygons(., na.rm = TRUE, dissolve=TRUE) %>% 
@@ -44,6 +44,19 @@ path3 <- biophys.lst[[3]] %>%
   rasterToPolygons(., na.rm = TRUE, dissolve = TRUE) %>% 
   st_as_sf(.)
 path3.area <- st_area(path3)/4000
+
+social1.lst <- social1[[1]]
+#social2.lst <- social2[[1]]
+
+path1 <- biophys.lst[[1]] %>% 
+  rasterToPolygons(., na.rm = TRUE)
+plot(path1)
+path2<- biophys.lst[[2]] %>% 
+  rasterToPolygons(., na.rm = TRUE)
+plot(path2)
+path3 <- biophys.lst[[3]] %>% 
+  rasterToPolygons(., na.rm = TRUE)
+plot(path3)
 
 
 # social extract ----------------------------------------------------------
@@ -72,6 +85,22 @@ bio3.extract <- raster::extract(biophys.resist, path3)
 df3 <- data.frame(matrix(unlist(bio3.extract), nrow=length(bio3.extract), byrow=TRUE))
 bio3.acc <- sum(df3$matrix.unlist.bio3.extract...nrow...length.bio3.extract...byrow...TRUE.)
 
+
+
+# master dataframe for plotting -------------------------------------------
+master.df <- data.frame(label = c(1, 2, 3),
+                        biophys.cost.km = c(bio1.acc/(path1.area/1000), bio2.acc/(path2.area/1000), bio3.acc/(path3.area/1000)),
+                        social.cost.km = c(path1.acc/(path1.area/1000), path2.acc/(path2.area/1000), path3.acc/(path3.area/1000)),
+                         distance = c(path1.area/1000, path2.area/1000, path3.area/1000))
+                        
+par(mfrow = c(1, 2))
+colors = c("#990000","#FF6633", "#336300")
+units(master.df$biophys.cost.km) <- NULL
+units(master.df$social.cost.km) <- NULL
+units(master.df$distance) <- NULL
+
+barplot(master.df$biophys.cost, main = "Biophys Cost / km", col = colors)
+barplot(master.df$social.cost, main23aesd = "Social Cost / km", col = colors)
 # calculate the distance
 
 d <- readRDS("data/processed/TransitionLayers/ms_tree.rds")
