@@ -94,7 +94,7 @@ current.dens <- dist.cln %>%
   flextable::flextable() %>% 
   flextable::set_header_labels(., ID = "Cost Rank", max.dist = "Distance (km)", sum.current = "Total Current") 
 
-flextable::save_as_docx(current.dens, path = here::here("plots/table2_BF_FP.docx"))
+flextable::save_as_docx(current.dens, path = here::here("plots/table.docx"))
 
 # Estimate cost.ratio -----------------------------------------------------
 library(tidyr)
