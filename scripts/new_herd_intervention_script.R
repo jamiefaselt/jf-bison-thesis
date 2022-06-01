@@ -20,7 +20,8 @@ head(reproj)
 
 # filter and buffer
 large.pas <- reproj %>% 
-  filter(., GIS_Acres > 25000) 
+  filter(., GIS_Acres > 50000) 
+head(large.pas)
 #plot(st_geometry(large.pas))
 
 # bring in the social layer
@@ -33,7 +34,8 @@ bis.inc.pop <- raster("data/raster_layers/bis_inc_pop_est.tif")
 
 #bring in habitat suitability
 hab <- raster("data/processed/hsi_resample.tif")
-
+biophys <- raster("data/raster_layers/biophys_resistance_layer.tif")
+social <- raster("data/raster_layers/social_resistance_layer.tif")
 #bring in tribal governance preferences
 tribal.gov <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") %>% 
   resample(., r)
@@ -43,34 +45,49 @@ comp <- raster("data/raster_layers/social_composite_layer.tif")
 
 # extract data
 large.pas$ID <- seq(1, nrow(large.pas))
-extract <- raster::extract(bison.inc, large.pas, buffer = 50000, fun = mean, na.rm = TRUE, df = TRUE)
+#extract <- raster::extract(bison.inc, large.pas, buffer = 50000, fun = mean, na.rm = TRUE, df = TRUE)
 extract2 <- raster::extract(hab, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
-extract3 <- raster::extract(tribal.gov, large.pas, buffer = 50000, fun = mean, na.rm = TRUE, df = TRUE)
+#extract3 <- raster::extract(tribal.gov, large.pas, buffer = 50000, fun = mean, na.rm = TRUE, df = TRUE)
 extract4 <- raster::extract(comp, large.pas, buffer =50000, fun = mean, na.rm = TRUE, df = TRUE)
+
+bio.extract <- raster::extract(biophys, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
+social.extract <- raster::extract(social, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
 
 #join into one df
 join <- left_join(large.pas, extract) %>% 
   left_join(., extract2) %>% 
   left_join(., extract3) %>% 
-  left_join(., extract4)
+  left_join(., extract4) %>% 
+  left_join(., bio.extract) %>% 
+  left_join(., social.extract)
 
 #view and subset for simplification
 head(join)
-df <- subset(join, select = c(Unit_Nm, ID, bis_inc, social_composite_layer, hsi_resample, tribal_wildlife_gov_tract, d_Des_Tp,  geometry))
+df <- subset(join, select = c(Unit_Nm, ID, bis_inc, social_composite_layer, hsi_resample, tribal_wildlife_gov_tract, d_Des_Tp,  biophys_resistance_layer, social_resistance_layer, geometry))
 
 #find the upper 75% of habitat suitabillity
-hab.qual<-quantile(df$hsi_resample,probs=c(0.5,0.75, .8))
+hab.qual<-quantile(df$hsi_resample,probs=c(0.25, 0.5,0.75, .9))
 hab.qual
-# 75% = 39.61886 
-hab.90 <- df %>% 
-  filter(., hsi_resample > 40.82832 )
+
+hab.75 <- df %>% 
+  filter(., hsi_resample > 24.6 )
 
 #find the lowest 25% of social composite
-resistance<-quantile(df$social_composite_layer,probs=c(0,0.25,0.5,0.75))
+resistance<-quantile(hab.75$social_resistance_layer,probs=c(0,0.25,0.5,0.75, .9))
 resistance
-composite <- hab.90 %>% 
-  filter(., social_composite_layer < 0.8623746 ) %>% 
-  filter(., hsi_resample>42.3)
+composite <- hab.75 %>% 
+  filter(., social_resistance_layer < 541.2 ) 
+composite <- st_transform(composite, st_crs(r))
+
+r <- raster("data/template_raster.tif")
+states <- tigris::states()
+mt <- states %>% filter(., NAME=="Montana", drop=TRUE) %>% st_transform(., st_crs(r))
+
+plot(st_geometry(mt))
+plot(st_geometry(composite), add = TRUE, col = "red", outline = "red")
+plot(st_geometry(herds), add = TRUE)
+
+st_write(composite, "data/processed/publand_shortcircuit.shp")
 
 centroids <- st_centroid(composite)
 plot(centroids)
