@@ -9,7 +9,7 @@ library(patchwork)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
-cattle <- raster("data/raster_layers/newherd_sales_layer.tif")
+cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
 r <- raster("data/template_raster.tif") %>% 
   mask(., cattle)
 
@@ -18,13 +18,19 @@ implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_la
   mask(., r)
 biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc')) %>% 
   mask(., r)
-econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))
-new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_biophys_resistance_layer/newnode_biophys_out_cum_curmap.asc"))
-implement.min <- raster(here::here("data/circuitscape_outputs/null/null_out_cum_curmap.asc"))
+econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))%>% 
+  mask(., r)
+gov.cs <- raster(here::here("data/circuitscape_outputs/tribal_scenario/tribal_scenario_out_cum_curmap.asc"))%>% 
+                   mask(., r)
+new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc"))%>% 
+  mask(., r)
+implement.min <- raster(here::here("data/circuitscape_outputs/null/null_out_cum_curmap.asc"))%>% 
+  mask(., r)
 # normalize ---------------------------------------------------------------
 
 implement.norm <- implement.cs/implement.min
 econ.norm <- econ.cs/implement.min
+gov.norm <- gov.cs/implement.min
 newnode.norm <- new.node.cs/implement.min
 
 # Convert to df -----------------------------------------------------------
@@ -45,13 +51,21 @@ econ.norm.df <- econ.norm %>%
   mutate(., channel = ifelse(econ > 1.2, 1, 
                              ifelse(2 > econ & econ >= 0.8, NA, 0)))
 
+gov.norm.df <- gov.norm %>%
+  projectRaster(., res=300, crs = crs(implement.cs)) %>%
+  rasterToPoints %>%
+  as.data.frame() %>%
+  `colnames<-`(c("x", "y", "gov")) %>% 
+  mutate(., channel = ifelse(gov > 1.2, 1, 
+                             ifelse(2 > gov & gov >= 0.8, NA, 0)))
+
 newnode.norm.df <- newnode.norm %>%
   projectRaster(., res=300, crs = crs(implement.cs)) %>%
   rasterToPoints %>%
   as.data.frame() %>%
-  `colnames<-`(c("x", "y", "newherd")) %>% 
-  mutate(., channel = ifelse(newherd > 1.2, 1, 
-                             ifelse(2 > newherd & newherd >= 0.8, NA, 0)))
+  `colnames<-`(c("x", "y", "newnode")) %>% 
+  mutate(., channel = ifelse(newnode > 1.2, 1, 
+                             ifelse(2 > newnode & newnode >= 0.8, NA, 0)))
 
 # Add addtional map eleements ---------------------------------------------
 
@@ -172,8 +186,29 @@ p2 <- RStoolbox::ggR(hills3) +
         legend.direction = 'horizontal',
         legend.justification = "center"  )
 
-
 p3 <- RStoolbox::ggR(hills3) +
+  geom_raster(
+    data = gov.norm.df[!is.na(gov.norm.df$channel),],
+    aes(
+      x=x,
+      y=y,
+      fill = factor(channel)
+    ),
+    interpolate = TRUE,
+  ) +
+  scale_fill_viridis(labels = c("Impeded", "Channelized"), discrete = TRUE, begin = 0.33, end = 0.8,option = "D") +
+  geom_sf(data = PAs, fill = "forestgreen") +
+  geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
+  ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), 
+                           nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+  guides(fill = guide_legend(title.position = "top", 
+                             label.position="bottom", title = NULL)) +
+  theme_map() +
+  theme(legend.position = 'bottom',
+        legend.direction = 'horizontal',
+        legend.justification = "center"  )
+
+p4 <- RStoolbox::ggR(hills3) +
   geom_raster(
     data = newnode.norm.df[!is.na(newnode.norm.df$channel),],
     aes(
@@ -195,7 +230,7 @@ p3 <- RStoolbox::ggR(hills3) +
         legend.direction = 'horizontal',
         legend.justification = "center"  )
 
-combined.plot <- p1+p2+p3 + plot_layout(guides = "collect") +  plot_annotation(tag_levels = "A", tag_suffix = ")") & theme(legend.position = "bottom", legend.justification = "center",
+combined.plot <- p1+p2+p3+p4+ plot_layout(guides = "collect") +  plot_annotation(tag_levels = "A", tag_suffix = ")") & theme(legend.position = "bottom", legend.justification = "center",
                                                                                                                            legend.margin=margin(0,0,0,0),
                                                                                                                            legend.box.margin=margin(-15,-10,-10,-10)) 
 ggsave(here::here("plots/channelization.png"), plot =combined.plot)
