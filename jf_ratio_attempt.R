@@ -141,3 +141,5 @@ path3.ratio <- path3.acc/bio3.acc
 plot(path1.ratio)
 plot(path2.ratio, add = TRUE)
 plot(path3.ratio)
+
+st_write(master.df, "data/processed/extract_dataframe.csv")
