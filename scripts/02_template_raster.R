@@ -21,31 +21,32 @@ hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 hsi
 
 # load the herd locations
-mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp")
-mt_fws <- st_read("data/original/mt_fws/MT_FWS.shp")
-mt_CMR <- mt_fws %>% 
-  filter(., ORGNAME=="CHARLES M. RUSSELL NATIONAL WILDLIFE REFUGE",  drop=TRUE)
+reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
+  st_transform(crs=st_crs(hsi)) %>% 
+  st_make_valid(.)
+apr <- st_read("data/original/AP_Property_Boundaries_011022/doc.kml") %>% 
+  st_transform(crs=st_crs(hsi)) %>% 
+  st_make_valid(.)
 mt_NPS <- st_read("data/original/nps_boundaries/NationalParkServiceAdminBoundaries_Montana.shp")
 yellowstone <- mt_NPS %>% 
-  filter(., UNIT_NAME=="Yellowstone National Park",  drop=TRUE)
+  filter(., UNIT_NAME=="Yellowstone National Park",  drop=TRUE) %>% 
+  st_transform(crs=st_crs(hsi)) %>% 
+  st_make_valid(.)
 
 # make sure all the projections are the same
-reservations <- mt_reservations %>% st_transform(crs=st_crs(hsi)) %>% 
-  st_make_valid()
-cmr <- mt_CMR %>% st_transform(crs=st_crs(hsi)) %>% 
-  st_make_valid()
-yellowstone <- yellowstone %>% st_transform(crs=st_crs(hsi)) %>% 
-  st_make_valid()
+st_crs(reservations)==st_crs(hsi)
+st_crs(apr)==st_crs(hsi)
+st_crs(yellowstone)==st_crs(hsi)
 mtwy <- mtwy %>% st_transform(crs=st_crs(hsi))
 mt <- mt %>% st_transform(crs=st_crs(hsi))
 
 #combine them into one shapefile
 yellowstone <- yellowstone %>%
   rename(NAME = UNIT_NAME)
-cmr <- cmr %>% 
-  rename(NAME = ORGNAME)
+apr <- apr %>% 
+  rename(NAME = Name)
 
-all.nodes <- bind_rows(reservations, cmr, yellowstone)
+all.nodes <- bind_rows(reservations, apr, yellowstone)
 class(all.nodes)
 plot(st_geometry(all.nodes)) # looks good
 

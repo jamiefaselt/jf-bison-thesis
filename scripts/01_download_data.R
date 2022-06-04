@@ -59,7 +59,8 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/Montana_Cadastral/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 # Download Montana Reservation Data ------------------------------------------------------
-folder_url <- "https://drive.google.com/drive/u/0/folders/1lpinf7nttBux4Zz2h2VM6C-J7POrCdvr" # Reservation Shapefiles
+folder_url <- "https://drive.google.com/drive/u/0/folders/1lpinf7nttBux4Zz2h2VM6C-J7POrCdvr" # Reservatio shapefiles
+folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/mt_reservations/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
