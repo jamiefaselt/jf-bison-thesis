@@ -83,3 +83,8 @@ writeRaster(biophys_mask, "data/raster_layers/biophys_resistance_layer.tif", ove
 # now we have the biophysical resistance surface based on the habitat suitability index and human modification layers combined with a fuzzy sum approach and turned into a resistance layer using methods from Dickson et al.
 
 # before moving on to the bivariate maps need to run the biophysical resistance layer and social composite resistance layers in circuitscape
+
+# start with /Users/jamiefaselt/jf-bison-thesis/ini_files/biophys.ini (adjust to your path name but after jf-bison-thesis should be same)
+
+# /Users/jamiefaselt/jf-bison-thesis/ini_files/social.ini
+
