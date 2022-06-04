@@ -17,8 +17,8 @@ r <- raster("data/template_raster.tif") %>%
 herds <- raster("data/processed/all_nodes.tif")
 
 # Economic Intervention Scenario ------------------------------------------
-econ.data <- raster("data/raster_layers/econ_incentive_layer.tif")
-bison.inc <- raster("data/raster_layers/bis_inc.tif")
+econ.data <- raster("data/wildlife_model_tifs/econ_incentive_layer.tif")
+bison.inc <- raster("data/wildlife_model_tifs/bis_inc.tif")
 econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
@@ -37,13 +37,12 @@ plot(fuz.sum)
 #make resistance
 econ.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(econ.scenario)
-plot(st_geometry(herds), add= TRUE)
 writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
 
 # Tribal Governance Scenario ----------------------------------------------
-tribal.wildlife <- raster("data/raster_layers/tribal_wildlife_gov_tract.tif") %>% 
+tribal.wildlife <- raster("data/wildlife_model_tifs/tribal_wildlife_gov_tract.tif") %>% 
   resample(., bison.inc) 
-bison.inc <- raster("data/raster_layers/bis_inc.tif")
+bison.inc <- raster("data/wildlife_model_tifs/bis_inc.tif")
 tribal.scenario <- 1-(bison.inc+tribal.wildlife)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
@@ -62,7 +61,6 @@ plot(fuz.sum)
 #make resistance
 tribal.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(tribal.scenario)
-plot(st_geometry(herds), add= TRUE)
 writeRaster(tribal.scenario, "data/raster_layers/tribal_scenario.tif", overwrite = TRUE)
 
 
@@ -83,7 +81,8 @@ st_is_valid(mt.padus)
 head(mt.padus)
 
 # reproject
-reproj <- st_transform(mt.padus, crs = st_crs(r))
+reproj <- st_transform(mt.padus, crs = st_crs(r)) %>% 
+  st_make_valid(.)
 #plot(st_geometry(reproj))
 head(reproj)
 
@@ -99,14 +98,11 @@ large.pas$ID <- seq(1, nrow(large.pas))
 hab <- raster("data/processed/hsi_resample.tif")
 social <- raster("data/raster_layers/social_resistance_layer.tif")
 
-#want to compare with social composite
-comp <- raster("data/raster_layers/social_composite_layer.tif")
-
 # extract data
 large.pas$ID <- seq(1, nrow(large.pas))
 
-bio.extract <- raster::extract(biophys, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
-social.extract <- raster::extract(social, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
+bio.extract <- raster::extract(hab, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
+social.extract <- raster::extract(social, large.pas, fun = mean, buffer = 5000, na.rm = TRUE, df = TRUE)
 
 #join into one df
 join <- left_join(large.pas, bio.extract) %>% 
@@ -124,13 +120,13 @@ hab.qual<-quantile(df$hsi_resample,probs=c(0.25, 0.5,0.75, .9))
 hab.qual
 
 hab.75 <- df %>% 
-  filter(., hsi_resample > 24.6 )
+  filter(., hsi_resample > 39.68)
 
 #find the lowest 50% of social composite
 resistance<-quantile(hab.75$social_resistance_layer,probs=c(0,0.25,0.5,0.75, .9))
 resistance
 composite <- hab.75 %>% 
-  filter(., social_resistance_layer < 672.3 ) %>% 
+  filter(., social_resistance_layer < 629.5 ) %>% 
   st_transform(., st_crs(r))
 
 
@@ -139,10 +135,6 @@ states <- tigris::states()
 mt <- states %>% filter(., NAME=="Montana", drop=TRUE) %>% st_transform(., st_crs(r))
 
 st_write(composite, "data/processed/publand_shortcircuit.shp", append = FALSE)
-
-centroids <- st_centroid(composite)
-plot(st_geometry(centroids))
-
 
 new.herds <- st_read("data/processed/publand_shortcircuit.shp")
 new.herds$ID <- seq(1, nrow(new.herds))
