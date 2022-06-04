@@ -63,3 +63,5 @@ values(r) <- 1:ncell(r)
 # save the template raster
 writeRaster(r, "data/template_raster.tif", overwrite = TRUE)
 
+
+# by the end of this script have a template raster matched to my largest raster (the habitat suitability layer or hsi) that is cropped to a bounding box of montana and 50 km south of the yellowstone herd

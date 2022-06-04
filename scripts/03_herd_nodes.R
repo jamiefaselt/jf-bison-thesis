@@ -54,7 +54,7 @@ plot(st_geometry(herds))
 herds <- subset(herds, select = c(NAME, geometry))
 
 
-st_write(herds, "data/processed/herd_shapefile_outline.shp", delete_layer=TRUE )
+st_write(herds, "data/processed/herd_shapefile_outline.shp")
 
 # take the centroid
 herds_cent <- st_centroid(herds)
@@ -64,10 +64,12 @@ herds_cent$ID <- seq(1, nrow(herds_cent))
 new_herd <- subset(herds_cent, select = c(NAME, geometry, ID))
 st_write(new_herd,"data/processed/herd_centroids.shp")
 
-all.nodes <- herds_cent %>% st_buffer(., 500) # buffered to have something to rasterize  
+all.nodes <- herds_cent %>% st_buffer(., 500) # buffered to have something to rasterize anything below 500 was not giving me any values in the raster 
 plot(all.nodes)
 node.rast<-fasterize::fasterize(all.nodes, r, field = 'ID')
 plot(node.rast)
 writeRaster(node.rast, "data/processed/all_nodes.tif", overwrite = TRUE)
+
+# by end of this script have: shapefile of herd outlines, shapefile of herd centroids, raster of herd centroids
 
 
