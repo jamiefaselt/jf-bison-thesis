@@ -64,13 +64,6 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/mt_reservations/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-# Download Metadata for Montana Private Conservation Lands Data ------------------------------------------------------
-folder_url <- "https://drive.google.com/drive/u/0/folders/1-2qhFff5eDlY7sOyhcRC9xK_LDPBiqoD" # Metadata for Montana Private Conservation Lands
-folder <- drive_get(as_id(folder_url))
-gdrive_files <- drive_ls(folder)
-lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("data/original/LandMan_PrvtCons/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
-
 
 # Download HMI for US Data ------------------------------------------------------
 folder_url <- "https://drive.google.com/drive/folders/1uBKCAeZ4VStT7N0HYy-yd0IbEyrtEdtE" # HMI from Theobold
@@ -94,32 +87,37 @@ lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/original/AP_Property_Boundaries_011022/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
-# Kate's model outputs ----------------------------------------------------
-folder_url <- "https://drive.google.com/drive/u/0/folders/1YUnlivNLMqwJWT739j1Jh6pz_tag6e-l" # raster layers for bison increase and such
+# Kate's model outputs tifs ----------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1kcbX5z58e4cPyN2USv6UryjUju2uPv1T" # raster layers for bison increase and intervention scenarios
 folder <- drive_get(as_id(folder_url))
 gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("data/raster_layers/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+                                                   path = paste0(here::here("data/wildlife_model_tifs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
 
 ################### Old / Temp Data ################
 # Temp CS Output Data -----------------------------------------------------
 # will eventually run these all on the remote computer but for workflow purposes doing this way now
-folder_url <- "https://drive.google.com/drive/u/0/folders/1Fn2EbSNZoJgFBMHqmEaCNxVd4kEkYGZL" # cs outputs temp solution
-folder <- drive_get(as_id(folder_url))
-gdrive_files <- drive_ls(folder)
-lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("data/circuitscape_outputs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+#folder_url <- "https://drive.google.com/drive/u/0/folders/1Fn2EbSNZoJgFBMHqmEaCNxVd4kEkYGZL" # cs outputs temp solution
+#folder <- drive_get(as_id(folder_url))
+#gdrive_files <- drive_ls(folder)
+#lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                  # path = paste0(here::here("data/circuitscape_outputs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 # above wasn't working and i just neeeded the updated biophys layer for now
-folder_url <- "https://drive.google.com/drive/u/0/folders/1FsWGSTeabEgbo7IVkkVk_TeuZgxLy0xb" # cs outputs temp solution
-folder <- drive_get(as_id(folder_url))
-gdrive_files <- drive_ls(folder)
-lapply(gdrive_files$id, function(x) drive_download(as_id(x),
-                                                   path = paste0(here::here("data/circuitscape_outputs/biophys_resistance_layer/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
+#folder_url <- "https://drive.google.com/drive/u/0/folders/1FsWGSTeabEgbo7IVkkVk_TeuZgxLy0xb" # cs outputs temp solution
+#folder <- drive_get(as_id(folder_url))
+#gdrive_files <- drive_ls(folder)
+#lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+ #                                                  path = paste0(here::here("data/circuitscape_outputs/biophys_resistance_layer/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
-
+# Download Metadata for Montana Private Conservation Lands Data ------------------------------------------------------
+#folder_url <- "https://drive.google.com/drive/u/0/folders/1-2qhFff5eDlY7sOyhcRC9xK_LDPBiqoD" # Metadata for Montana Private Conservation Lands
+#folder <- drive_get(as_id(folder_url))
+#gdrive_files <- drive_ls(folder)
+#lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+ #                                                  path = paste0(here::here("data/original/LandMan_PrvtCons/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 
