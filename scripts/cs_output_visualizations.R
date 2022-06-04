@@ -50,7 +50,10 @@ plot(econ.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main="Economic Incent
 plot(st_geometry(mt.counties), add = TRUE)
 
 #### new herds scenario
-new.node <- raster("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc")
-quantile(new.node)
-plot(new.node, col=plasma(256), zlim=c(0,.08), axes = TRUE, main="New Herd Incentive Scenario")
+new.node.cs <- raster("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc")
+quantile(new.node.cs)
+plot(new.node.cs, col=plasma(256), zlim=c(0,.08), axes = TRUE, main="New Herd Incentive Scenario")
 plot(st_geometry(mt.counties), add = TRUE)
+
+
+

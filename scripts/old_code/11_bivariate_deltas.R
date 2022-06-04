@@ -16,8 +16,8 @@ implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_la
 biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc')) %>% 
   mask(., r)
 econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))
-gov.cs <- raster(here::here('data/circuitscape_outputs/tribal_scenario/tribal_scenario_out_cum_curmap.asc'))
-new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc"))
+tgov.cs <- raster(here::here('data/circuitscape_outputs/tribal_scenario/tribal_scenario_out_cum_curmap.asc'))
+newnode.cs <- raster(here::here("data/circuitscape_outputs/newnode_biophys_resistance_layer/newnode_biophys_out_cum_curmap.asc"))
 
 # convert to dataframes ---------------------------------------------------
 
@@ -41,14 +41,7 @@ econ.df <- econ.cs %>%
   `colnames<-`(c("x", "y", "econ")) %>% 
   mutate(econ.norm = (econ - min(econ, na.rm=TRUE))/(max(econ, na.rm=TRUE)-min(econ, na.rm=TRUE)))
 
-gov.df <- gov.cs %>% 
-  projectRaster(., res=300, crs = crs(biophys.cs)) %>%
-  rasterToPoints %>%
-  as.data.frame() %>%
-  `colnames<-`(c("x", "y", "gov"))  %>% 
-  mutate(gov.norm = (gov - min(gov, na.rm=TRUE))/(max(gov, na.rm=TRUE)-min(gov, na.rm=TRUE)))
-
-new.node.df <- new.node.cs %>% 
+new.node.df <- tgov.cs %>% 
   projectRaster(., res=300, crs = crs(biophys.cs)) %>%
   rasterToPoints %>%
   as.data.frame() %>%
@@ -75,12 +68,6 @@ econ.reclass <- econ.df %>%
                 diff = PCT - implement.reclass$PCT,
                 difnorm = PCTnorm - implement.reclass$PCTnorm)
 
-
-gov.reclass <- gov.df %>% 
-  dplyr::mutate(., PCT = as.integer(cut(gov, breaks = implement.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                PCTnorm = as.integer(cut(gov.norm, breaks = implement.norm.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                diff = PCT - implement.reclass$PCT,
-                difnorm = PCTnorm - implement.reclass$PCTnorm)
 
 new.node.reclass <- new.node.df %>% 
   dplyr::mutate(., PCT = as.integer(cut(new.node, breaks = implement.quant, include.lowest = TRUE, ordered_result = TRUE)),
@@ -114,7 +101,7 @@ colmat<-function(nquantiles=10, upperleft=rgb(0,150,235, maxColorValue=255), upp
   seqs[1]<-1
   col.matrix<-col.matrix[c(seqs), c(seqs)]}
 
-(library(classInt))
+
 col.matrix<-colmat(nquantiles=5)
 
 
@@ -273,32 +260,6 @@ p2 <- RStoolbox::ggR(hills3) +
 
 p3 <- RStoolbox::ggR(hills3) +
   geom_raster(
-    data = gov.reclass,
-    aes(
-      x=x,
-      y=y,
-      fill=difnorm
-    ),
-    alpha=0.8,
-    interpolate = TRUE
-  ) +
-  scale_fill_cmocean(name="curl", limits = c(-3,3)) +
-  geom_sf(data = PAs, fill = "forestgreen") +
-  geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
-  #ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "black")+
-  guides(fill = guide_colorbar(nbin = 8,  title.position = "top", 
-                               label.position="bottom", title = "\u0394 in rank")) +
-  theme_map() +
-  theme(legend.position = 'bottom',
-        legend.direction = 'horizontal',
-        legend.justification = "center"  )
-
-deltas <- p2 + p3 + plot_layout(guides = 'collect') & theme(legend.position = "bottom", legend.justification = "center",
-                                                            legend.margin=margin(0,0,0,0),
-                                                            legend.box.margin=margin(-15,-10,-10,-10))
-
-p4 <- RStoolbox::ggR(hills3) +
-  geom_raster(
     data = new.node.reclass,
     aes(
       x=x,
@@ -318,13 +279,12 @@ p4 <- RStoolbox::ggR(hills3) +
   theme(legend.position = 'bottom',
         legend.direction = 'horizontal',
         legend.justification = "center"  )
-library(patchwork)
+
 deltas <- p2 + p3 + plot_layout(guides = 'collect') & theme(legend.position = "bottom", legend.justification = "center",
                                                             legend.margin=margin(0,0,0,0),
                                                             legend.box.margin=margin(-15,-10,-10,-10))
 
-
-triplot <- p1 + p2 + p3 + p4 + plot_annotation(tag_levels = "A", tag_suffix = ")")& theme(legend.position = "bottom", legend.justification = "center",
+triplot <- p1 + p2 + p3 + plot_annotation(tag_levels = "A", tag_suffix = ")")& theme(legend.position = "bottom", legend.justification = "center",
                                                                                      legend.margin=margin(0,0,0,0),
                                                                                      legend.box.margin=margin(-15,-10,-10,-10))   
 
