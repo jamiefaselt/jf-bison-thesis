@@ -95,7 +95,12 @@ gdrive_files <- drive_ls(folder)
 lapply(gdrive_files$id, function(x) drive_download(as_id(x),
                                                    path = paste0(here::here("data/wildlife_model_tifs/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
-
+# Voting data -----------------------------------------------------------
+folder_url <- "https://drive.google.com/drive/u/0/folders/1makcSx5Y9LJMTXCQH3aaFTN2royioTtM" # voting stats from harvard voting lab
+folder <- drive_get(as_id(folder_url))
+gdrive_files <- drive_ls(folder)
+lapply(gdrive_files$id, function(x) drive_download(as_id(x),
+                                                   path = paste0(here::here("data/original/pres_voting/"), gdrive_files[gdrive_files$id==x,]$name), overwrite = TRUE))
 
 ################### Old / Temp Data ################
 # Temp CS Output Data -----------------------------------------------------

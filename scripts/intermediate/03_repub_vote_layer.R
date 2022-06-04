@@ -15,7 +15,7 @@ rescale01 <- function(r1) {
 }
 
 
-votes2000.2020 <- read_csv("data/original/countypres_2000-2020.csv")
+votes2000.2020 <- read_csv("data/original/pres_voting/countypres_2000-2020.csv")
 colnames(votes2000.2020)
 head(votes2000.2020)
 counties <- tigris::counties()
@@ -66,6 +66,8 @@ plot(mtwy.republican)
 rescale <- rescale01(mtwy.republican)
 plot(rescale)
 writeRaster(rescale, "data/raster_layers/repub_vote_layer.tif", overwrite = TRUE)
+
+# can stop here -- below was for me to check if it made more sense to do just 2020 or take the average and i opted for the average
 ##############################################################################
 #let's see if 2020 is different than the average 
 wy.2020 <- votes.wy %>% filter(year %in% c("2020"))
@@ -89,48 +91,3 @@ plot(mt.2020.rast)
 
 mt.diff <- mt.2020.rast - mt.rep.avg.rast
 plot(mt.diff)
-
-
-
-############################################## ignore below
-# curious to loook at us as a whole
-states <- tigris::states()
-#<-terra::rast( xmin=-6500000, xmax= 3500000, ymin=-3000000, ymax=5000000,crs='ESRI:102008', resolution=5000, vals=0)
-#r1 <- raster(crs= albers, ext=raster::extent(as(counties, "Spatial")), resolution= 5000)
-#r1 <- raster(crs='ESRI:102008', ext=raster::extent(as(counties, "Spatial")), resolution= 1000)
-albers<- st_crs('ESRI:102008') 
-
-r2d2 <- raster(crs= 'ESRI:102008', ext=raster::extent(as(states, "Spatial")), resolution= 90)
-extent(states)
-plot(states)
-
-votes2000.2020 <- read_csv("Data/countypres_2000-2020.csv")
-colnames(votes2000.2020)
-head(votes2000.2020)
-counties <- tigris::counties()
-
-counties$NAME <- toupper(counties$NAME)
-counties <- rename(counties, "county_name" = "NAME")
-
-votes <- votes2000.2020 %>% filter(party %in% c("REPUBLICAN")) %>% 
-  mutate(., percentrepub= (candidatevotes/totalvotes)*100) %>% 
-  group_by(., county_name) %>% 
-  summarise(avgrep = mean(percentrepub))
-
-votes.join <- left_join(counties, votes) %>% 
-  st_as_sf()
-
-votesavg<-fasterize::fasterize(votes.join, r2d2, field = 'avgrep')
-plot(votesavg)
-
-#let's see if 2020 is different than the average 
-v.2020 <- votes %>% filter(year %in% c("2020"))
-v.2020.rep <- v.2020 %>% filter(party %in% c("REPUBLICAN")) %>% 
-  mutate(., percentrepub = (candidatevotes/totalvotes)*100)
-v.2020.jn <- left_join(counties, v.2020.rep) %>% 
-  st_as_sf()
-v.2020.rast<-fasterize::fasterize(v.2020.jn, r1, field = 'percentrepub')
-plot(v.2020.rast)
-
-wy.diff <- wy.2020.rast - wy.rep.avg.rast
-plot(wy.diff)

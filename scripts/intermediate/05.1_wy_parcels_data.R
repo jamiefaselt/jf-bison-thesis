@@ -73,6 +73,14 @@ wy.parcl.dens.rast<-fasterize::fasterize(wy.parcl.dens, r, field = 'parceldensit
 plot(wy.parcl.dens.rast)
 writeRaster(wy.parcl.dens.rast, "data/processed/wy_parcel_density.tif", overwrite = TRUE)
 
+
+
+
+
+
+
+
+
 # currently not using size ratio so can stop here
 ##### Size Ratio #####
 colnames(wy.parcels)

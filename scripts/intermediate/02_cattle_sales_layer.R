@@ -20,9 +20,10 @@ rescale01 <- function(r1) {
 
 # bring in hsi and temp raster
 r <- raster("data/template_raster.tif")
-hsi <- raster("data/processed/hsi_resample.tif")
+hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 cattle_sales <- read.csv("data/original/NASS_data/cattle_sales_MTWY.csv")
-#bring in counties
+
+#bring in counties to make the NASS data spatial
 counties <- tigris::counties()
 counties<-counties %>% filter(STATEFP %in%  c("30", "56"))
 counties<-st_transform(counties,st_crs(hsi))

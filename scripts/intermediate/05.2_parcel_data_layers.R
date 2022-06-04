@@ -69,9 +69,9 @@ mt.pd.rast<-fasterize::fasterize(parcel.dens, r, field = 'parceldensity')
 plot(mt.pd.rast)
 mt.pd <- rescale01(mt.pd.rast)
 plot(mt.pd)
-###############################################################################
 
-# wyoming parcel data run 05.5_wy_parcels_data.R script and keep in environment
+
+# bring back in wyoming parcel data to join and save as one tif
 wy.parcl.rast <- raster("data/processed/wy_parcel_density.tif")
 plot(wy.parcl.rast)
 wy.pd <- rescale01(wy.parcl.rast)
@@ -79,8 +79,19 @@ mtwy.pd <- merge(mt.pd, wy.pd)
 plot(mtwy.pd)
 writeRaster(mtwy.pd, "data/raster_layers/parcel_density_layer.tif", overwrite = TRUE)
 
+# by the end of 05.1 and 05.2 parcel scripts should have a raster layer showing parcel density for each county in study area. did this by taking the protected area total for each county and subtracting it from the total county area to get "parcelable land area" -- then bringing in the parcel data, calculating the number of parcels in each county, then calculating parcel density by total parcels/non pa area then converting it to hectares since that is the standard metric for parcel density 
 
-############## need to keep the wyoming script run for the objects to work below (did not want to save each individiaully before the merge)
+
+
+
+
+
+
+
+
+
+############## can stop here unless I opt for including stats on parcels
+############## need to keep the Wyoming script run for the objects to work below (did not want to save each individually before the merge)
 
 parcl.jn <- st_drop_geometry(mt.parcels)%>% 
   left_join(., pa.cty.area, by = c("CountyName"= "NAME")) %>% 

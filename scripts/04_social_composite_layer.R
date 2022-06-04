@@ -27,9 +27,9 @@ parceldensity <- raster("data/raster_layers/parcel_density_layer.tif")
 rc1.1m <- 1-bis.dec
 rc2.1m <- 1-cattle.sales
 rc3.1m <- 1-repub
-rc5.1m <- 1-parceldensity
+rc4.1m <- 1-parceldensity
 
-fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc5.1m)
+fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc4.1m)
 plot(fuz.sum) 
 
 writeRaster(fuz.sum, "data/processed/social_fuzsum.tif")
@@ -38,19 +38,9 @@ plot(social_resistance)
 plot(st_geometry(herds), add= TRUE)
 
 writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif", overwrite = TRUE)
-s <- raster("data/raster_layers/social_resistance_layer.tif")
-s
-#check to see what is contributing most?
-nf <- layout( matrix(c(1,2), ncol=2) )
-plot(social_resistance)
-plot(bis.dec)
-plot(social_resistance)
-plot(cattle.sales)
-plot(social_resistance)
-plot(repub)
-plot(social_resistance)
 
-# make a null raster
+
+# make a null raster based on min social resistance 
 cellStats(s, min)
 r <- setMinMax(r)
 values(r) <- 160.084
