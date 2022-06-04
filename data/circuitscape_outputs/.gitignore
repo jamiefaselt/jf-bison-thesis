@@ -2,9 +2,9 @@
 *
 # Except this file
 !.gitignore
-/biophys_cs
-/econ_cs
-/gov_cs
-/newherd_shortcircuit_cs
-/null_cs
-/social_cs
+!/biophys_cs
+!/econ_cs
+!/gov_cs
+!/newherd_shortcircuit_cs
+!/null_cs
+!/social_cs
