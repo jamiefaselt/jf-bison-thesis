@@ -12,12 +12,11 @@ cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
 r <- raster("data/template_raster.tif") %>% 
   mask(., cattle)
 # load inital cs layers ---------------------------------------------------
-implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc')) %>% 
+implement.cs <- raster(here::here('circuitscape_outputs/social_cs/social_out_cum_curmap.asc')) %>% 
   mask(., r)
-biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc')) %>% 
+biophys.cs <- raster(here::here('circuitscape_outputs/biophys_cs/biophys_out_cum_curmap.asc')) %>% 
   mask(., r)
-econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))
-new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc"))
+
 
 
 # convert to dataframes ---------------------------------------------------
