@@ -149,3 +149,9 @@ plot(newherd.rast)
 writeRaster(newherd.rast, "data/processed/shortcircuit.tif", overwrite= TRUE)
 
 # the same composite fuzzy sum approach is used for a resistance layer but the shortcircuit file is added to the ini file for CS
+
+# ini files to now run in circuitscape to use in next scripts
+# /Users/jamiefaselt/jf-bison-thesis/ini_files/econ_scenario.ini
+# /Users/jamiefaselt/jf-bison-thesis/ini_files/tribal_scenario.ini
+# /Users/jamiefaselt/jf-bison-thesis/ini_files/newherd_shortcircuit.ini
+# /Users/jamiefaselt/jf-bison-thesis/ini_files/null.ini

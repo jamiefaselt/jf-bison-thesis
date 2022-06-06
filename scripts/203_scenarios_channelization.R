@@ -24,7 +24,7 @@ gov.cs <- raster(here::here("circuitscape_outputs/gov_cs/tribal_scenario_out_cum
                    mask(., r)
 new.node.cs <- raster(here::here("circuitscape_outputs/newherd_shortcircuit_cs/newnode_out_cum_curmap.asc"))%>% 
   mask(., r)
-implement.min <- raster(here::here("data/circuitscape_outputs/null/null_out_cum_curmap.asc"))%>% 
+implement.min <- raster(here::here("circuitscape_outputs/null_cs/null_out_curmap_1_2.asc"))%>% 
   mask(., r)
 # normalize ---------------------------------------------------------------
 
