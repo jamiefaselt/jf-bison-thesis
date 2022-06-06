@@ -33,20 +33,6 @@ implement.df <- implement.cs %>%
   `colnames<-`(c("x", "y", "implement")) %>% 
   mutate(imp.norm = (implement - min(implement, na.rm=TRUE))/(max(implement, na.rm=TRUE)-min(implement, na.rm=TRUE)))
 
-econ.df <- econ.cs %>% 
-  projectRaster(., res=300, crs = crs(biophys.cs)) %>%
-  rasterToPoints %>%
-  as.data.frame() %>%
-  `colnames<-`(c("x", "y", "econ")) %>% 
-  mutate(econ.norm = (econ - min(econ, na.rm=TRUE))/(max(econ, na.rm=TRUE)-min(econ, na.rm=TRUE)))
-
-new.node.df <- new.node.cs %>% 
-  projectRaster(., res=300, crs = crs(biophys.cs)) %>%
-  rasterToPoints %>%
-  as.data.frame() %>%
-  `colnames<-`(c("x", "y", "new.node"))  %>% 
-  mutate(new.node.norm = (new.node - min(new.node, na.rm=TRUE))/(max(new.node, na.rm=TRUE)-min(new.node, na.rm=TRUE)))
-
 
 # Generate quantiles for each layer ---------------------------------------
 biophys.quant <- c(quantile(biophys.df$biophys, probs = seq(0, 1, 0.2), type = 5), Inf)
@@ -62,18 +48,6 @@ implement.reclass <- implement.df %>%
   dplyr::mutate(., PCT = as.integer(cut(implement, breaks = implement.quant, include.lowest = TRUE, ordered_result = TRUE)),
                 PCTnorm = as.integer(cut(imp.norm, breaks = implement.norm.quant, include.lowest = TRUE, ordered_result = TRUE)))
 
-econ.reclass <- econ.df %>% 
-  dplyr::mutate(., PCT = as.integer(cut(econ, breaks = implement.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                PCTnorm = as.integer(cut(econ.norm, breaks = implement.norm.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                diff = PCT - implement.reclass$PCT,
-                difnorm = PCTnorm - implement.reclass$PCTnorm)
-
-
-new.node.reclass <- new.node.df %>% 
-  dplyr::mutate(., PCT = as.integer(cut(new.node, breaks = implement.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                PCTnorm = as.integer(cut(new.node.norm, breaks = implement.norm.quant, include.lowest = TRUE, ordered_result = TRUE)),
-                diff = PCT - implement.reclass$PCT,
-                difnorm = PCTnorm - implement.reclass$PCTnorm)
 
 
 df.join.base <- left_join(biophys.reclass, implement.reclass, by = c("x","y")) %>%
