@@ -13,7 +13,7 @@ source(here::here("scripts/07_fun_K_mst.R"))
 
 
 # Load the data -----------------------------------------------------------
-implementation.resist1 <- raster("data/raster_layers/social_composite_layer.tif")
+implementation.resist1 <- raster("data/raster_layers/social_resistance_layer.tif")
 implementation.resist1[is.na(implementation.resist1[])] <- 5* cellStats(implementation.resist1, max)## drop NAs for costodistance
 biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
 biophys.resist[is.na(biophys.resist[])] <- 5* cellStats(biophys.resist, max)## drop NAs for costodistance
