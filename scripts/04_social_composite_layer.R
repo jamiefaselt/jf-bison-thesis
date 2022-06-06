@@ -41,8 +41,8 @@ writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif",
 
 
 # make a null raster based on min social resistance 
-cellStats(s, min)
+cellStats(social_resistance, min)
 r <- setMinMax(r)
-values(r) <- 160.084
+values(r) <-cellStats(social_resistance, min)
 
 writeRaster(r, "data/processed/null_resistance_layer.tif", overwrite = TRUE)
