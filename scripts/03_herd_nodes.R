@@ -25,17 +25,7 @@ mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.sh
 #apr shapefiles from APR staff
 apr <- st_read("data/original/AP_Property_Boundaries_011022/doc.kml") %>% 
   st_transform(.,st_crs(r)) %>% 
-  st_make_valid() 
-apr$area <- st_area(apr) %>% 
-  as.numeric(.)
-
-# cutting out parts of reserve that are too small (the actual herd locations are in the large tracts)
-lg.apr <- apr %>% 
-  filter(., area > 20000000)
-lg.apr<-lg.apr[!(lg.apr$Name=="73 Ranch"),]
-apr <- st_combine(lg.apr) %>% 
-  st_as_sf %>% 
-  rename(geometry = x) 
+  st_make_valid() %>% st_combine() %>% st_as_sf() %>% rename(geometry = x) 
 apr$NAME <-  seq(1, nrow(apr)) 
 apr[apr$NAME==1, "NAME"] <- "American Prairie Reserve"
 
@@ -54,15 +44,15 @@ plot(st_geometry(herds))
 herds <- subset(herds, select = c(NAME, geometry))
 
 
-st_write(herds, "data/processed/herd_shapefile_outline.shp")
+st_write(herds, "data/processed/herd_shapefile_outline.shp", append = FALSE)
 
 # take the centroid
 herds_cent <- st_centroid(herds)
-plot(st_geometry(herds_cent))
+plot(st_geometry(herds_cent), col = "red", add = TRUE)
 
 herds_cent$ID <- seq(1, nrow(herds_cent))
 new_herd <- subset(herds_cent, select = c(NAME, geometry, ID))
-st_write(new_herd,"data/processed/herd_centroids.shp")
+st_write(new_herd,"data/processed/herd_centroids.shp", append = FALSE)
 
 all.nodes <- herds_cent %>% st_buffer(., 500) # buffered to have something to rasterize anything below 500 was not giving me any values in the raster 
 plot(all.nodes)
