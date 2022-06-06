@@ -3,6 +3,8 @@ library(rasterVis)
 library(ggplot2)
 library(tidyverse)
 library(cmocean)
+library(sf)
+library(dplyr)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
@@ -11,13 +13,13 @@ r <- raster("data/template_raster.tif") %>%
   mask(., cattle)
 
 # load inital cs layers ---------------------------------------------------
-implement.cs <- raster(here::here('data/circuitscape_outputs/composite_social_layer/composite_social_out_cum_curmap.asc')) %>% 
+implement.cs <- raster(here::here('circuitscape_outputs/social_cs/social_out_cum_curmap.asc')) %>% 
   mask(., r)
-biophys.cs <- raster(here::here('data/circuitscape_outputs/biophys_resistance_layer/biophys_out_cum_curmap.asc')) %>% 
+biophys.cs <- raster(here::here('circuitscape_outputs/biophys_cs/biophys_out_cum_curmap.asc')) %>% 
   mask(., r)
-econ.cs <- raster(here::here('data/circuitscape_outputs/econ_scenario/econ_scenario_out_cum_curmap.asc'))
-gov.cs <- raster(here::here('data/circuitscape_outputs/tribal_scenario/tribal_scenario_out_cum_curmap.asc'))
-new.node.cs <- raster(here::here("data/circuitscape_outputs/newnode_composite_social_layer/newnode_composite_social_out_cum_curmap.asc"))
+econ.cs <- raster(here::here('circuitscape_outputs/econ_cs/econ_scenario_out_cum_curmap.asc'))
+gov.cs <- raster(here::here('circuitscape_outputs/gov_cs/tribal_scenario_out_cum_curmap.asc'))
+new.node.cs <- raster(here::here("circuitscape_outputs/newherd_shortcircuit_cs/newnode_out_cum_curmap.asc"))
 
 # convert to dataframes ---------------------------------------------------
 
@@ -324,7 +326,7 @@ triplot <- p1 + p2 + p3 + p4 + plot_annotation(tag_levels = "A", tag_suffix = ")
                                                                                      legend.margin=margin(0,0,0,0),
                                                                                      legend.box.margin=margin(-15,-10,-10,-10))   
 
-
+library(cowplot)
 p <- ggdraw(triplot)  +
   draw_plot(l, x = 0, y = 0, 
             width = 0.24, height = 0.24) 
