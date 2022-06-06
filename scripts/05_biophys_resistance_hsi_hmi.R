@@ -84,7 +84,11 @@ writeRaster(biophys_mask, "data/raster_layers/biophys_resistance_layer.tif", ove
 
 # before moving on to the bivariate maps need to run the biophysical resistance layer and social composite resistance layers in circuitscape
 
-# start with /Users/jamiefaselt/jf-bison-thesis/ini_files/biophys.ini (adjust to your path name but after jf-bison-thesis should be same)
+# open julia
+# can use parallel processors with this code: JULIA_NUM_THREADS=4
+# enter: using Circuitscape
+# set working directory: cd("/Users/NAME/jf-bison-thesis/")
+# enter: compute("ini_files/biophys.ini")
+# compute("ini_files/social.ini)
 
-# /Users/jamiefaselt/jf-bison-thesis/ini_files/social.ini
 
