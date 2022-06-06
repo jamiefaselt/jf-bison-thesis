@@ -1,5 +1,6 @@
 # jf-bison-thesis
 Social, political, and biophysical impacts on long-term connectivity for a wide-ranging species
+
 Understanding and comparing the social costs of Plains bison conservation efforts in the Northern Great Plains
 
 Jamie Faselt, Kate Sweet and Matt Williamson
