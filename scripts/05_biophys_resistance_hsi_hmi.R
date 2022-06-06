@@ -89,6 +89,6 @@ writeRaster(biophys_mask, "data/raster_layers/biophys_resistance_layer.tif", ove
 # enter: using Circuitscape
 # set working directory: cd("/Users/NAME/jf-bison-thesis/")
 # enter: compute("ini_files/biophys.ini")
-# compute("ini_files/social.ini)
+# compute("ini_files/social.ini")
 
 
