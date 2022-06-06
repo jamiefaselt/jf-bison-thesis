@@ -24,10 +24,9 @@ hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 cattle_sales <- read.csv("data/original/NASS_data/cattle_sales_MTWY.csv")
 
 #bring in counties to make the NASS data spatial
-counties <- tigris::counties()
-counties<-counties %>% filter(STATEFP %in%  c("30", "56"))
-counties<-st_transform(counties,st_crs(hsi))
-st_crs(counties)
+counties <- tigris::counties() %>% 
+  filter(STATEFP %in% c("30", "56")) %>% 
+  st_transform(., st_crs(hsi))
 
 # make columns match to nass data
 counties$NAME <- toupper(counties$NAME)
@@ -39,10 +38,14 @@ counties$County.ANSI <- as.numeric(counties$County.ANSI)
 #plot(counties) #checking and this doesn't have weird gaps yet
 cattle_sales$Value <- gsub(",","",cattle_sales$Value)
 cattle_sales$Value <- as.numeric(cattle_sales$Value)
-cattle_sales[is.na(cattle_sales)]=0
-
 # join
 cattlesales.spatial <- left_join(counties, cattle_sales)
+cattlesales.spatial<- subset(cattlesales.spatial, select = c(Value, geometry))
+median <- median(cattlesales.spatial$Value, na.rm = TRUE)
+
+cattlesales.spatial[is.na(cattlesales.spatial)] <- 29413000
+
+
 
 # double check projection
 st_crs(counties) == st_crs(cattlesales.spatial) #true
@@ -53,7 +56,7 @@ cattle.sales.sub <- cattlesales.spatial %>%
 class(cattle.sales.sub)
 cattlesales <- st_as_sf(cattle.sales.sub)
 #make this a raster with temp.raster already loaded
-rstr<<-fasterize::fasterize(cattlesales, r, field = 'Value')
+rstr<<-fasterize::fasterize(cattlesales.spatial, r, field = 'Value')
 hist(rstr)
 plot(rstr) 
 
