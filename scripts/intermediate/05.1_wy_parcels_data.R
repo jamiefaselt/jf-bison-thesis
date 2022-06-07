@@ -22,14 +22,30 @@ counties$State.ANSI <- as.numeric(counties$State.ANSI)
 counties$County.ANSI <- as.numeric(counties$County.ANSI)
 wy.counties<-counties %>% filter(State.ANSI %in%  c("56"))
 wy.counties<-st_transform(wy.counties,st_crs(r))
-cty <- wy.counties %>% st_transform(., st_crs(r))
+cty <- wy.counties %>% st_transform(., st_crs(r)) 
+#cty$cty.area <- as.numeric(st_area(cty))
+#cty$cty.area.nowat <- cty$cty.area-cty$AWATER
+#cty<- subset(cty, select = c(ALAND, AWATER, cty.area, cty.area.nowat, geometry))
 
 ##### PA Area #####
-wy.padus <- st_read("data/original/PADUS2_1_StateWY_Shapefile/PADUS2_1Designation_StateWY.shp")
-wy.pas <- st_transform(wy.padus, crs=st_crs(r)) %>% 
-  st_make_valid(.)
+wy.desig <- st_read("data/original/PADUS2_1_StateWY_Shapefile/PADUS2_1Designation_StateWY.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(., st_crs(r))
+wy.proc <- st_read("data/original/PADUS2_1_StateWY_Shapefile/PADUS2_1Proclamation_StateWY.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(., st_crs(r))
+wy.proc <- wy.proc[!(wy.proc$Des_Tp=="TRIBL" ),]
+
+
+wy.join <- bind_rows(wy.proc, wy.desig)
+
+diffPoly.wy <- st_difference(wy.join, st_union(wy.proc))
+
+wy.join.new <- bind_rows(diffPoly.wy, wy.proc)
+
+
 #get the total number of protected acres for each county
-s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],wy.pas)})
+s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],wy.join.new)})
 tst <- lapply(1:length(s12), function(x){
   s12[[x]] %>% 
     group_by(GEOID) %>% 
@@ -44,6 +60,9 @@ pa.cty.area <- cty %>%
 pa.cty.area$NAME <- toupper(pa.cty.area$NAME)
 pa.cty.area$PAarea <- as.numeric(pa.cty.area$PAarea)
 pa.cty.area$PAarea[is.na(pa.cty.area$PAarea)] = 0
+
+#calculate area of each county
+
 # make a new column for the total number of non protected land area
 pa.cty.area <- mutate(pa.cty.area, nonPAarea = ALAND - as.numeric(PAarea))
 head(pa.cty.area) # this all looks good!
@@ -73,6 +92,7 @@ wy.parcl.dens.rast<-fasterize::fasterize(wy.parcl.dens, r, field = 'parceldensit
 plot(wy.parcl.dens.rast)
 writeRaster(wy.parcl.dens.rast, "data/processed/wy_parcel_density.tif", overwrite = TRUE)
 
+wy <- raster("data/processed/wy_parcel_density.tif")
 
 
 

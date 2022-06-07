@@ -29,12 +29,29 @@ mt.counties<-counties %>% filter(State.ANSI %in%  c("30"))
 mt.counties<-st_transform(mt.counties,st_crs(r))
 cty <- mt.counties %>% st_transform(., st_crs(r))
 
-#bring in pas
-mt.padus <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Designation_StateMT.shp")
-mt.pas <- st_transform(mt.padus, crs=st_crs(r)) %>% 
-  st_make_valid(.)
+#bring in protected areas
+mt.desig <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Designation_StateMT.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(., st_crs(r)) %>% 
+  st_as_sf()
+mt.proc <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Proclamation_StateMT.shp") %>% 
+  st_make_valid() %>% 
+  st_transform(., st_crs(r)) %>% 
+  st_as_sf()
+mt.proc<-subset(mt.proc, Loc_Ds!="WMD" & Loc_Ds!="D1" & Loc_Ds!="D2")
+
+
+mt.join <- bind_rows(mt.proc, mt.desig)
+
+diffPoly <- st_difference(mt.join, st_union(mt.proc))
+
+plot(st_geometry(diffPoly))
+
+mt.join.new <- bind_rows(diffPoly, mt.proc)
+
+  
 #get the total number of protected acres for each county
-s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],mt.pas)})
+s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],mt.join.new)})
 tst <- lapply(1:length(s12), function(x){
   s12[[x]] %>% 
     group_by(GEOID) %>% 
@@ -69,8 +86,9 @@ mt.pd.rast<-fasterize::fasterize(parcel.dens, r, field = 'parceldensity')
 plot(mt.pd.rast)
 mt.pd <- rescale01(mt.pd.rast)
 plot(mt.pd)
+writeRaster(mt.pd, "data/processed/montana_pd.tif")
 
-
+old.pd <- raster("data/raster_layers/parcel_density_layer.tif")
 # bring back in wyoming parcel data to join and save as one tif
 wy.parcl.rast <- raster("data/processed/wy_parcel_density.tif")
 plot(wy.parcl.rast)
