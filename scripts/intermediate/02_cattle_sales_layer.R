@@ -40,10 +40,25 @@ cattle_sales$Value <- gsub(",","",cattle_sales$Value)
 cattle_sales$Value <- as.numeric(cattle_sales$Value)
 # join
 cattlesales.spatial <- left_join(counties, cattle_sales)
-cattlesales.spatial<- subset(cattlesales.spatial, select = c(Value, geometry))
-median <- median(cattlesales.spatial$Value, na.rm = TRUE)
 
-cattlesales.spatial[is.na(cattlesales.spatial)] <- 29413000
+# there are NA values for non-disclosed counties-- need Park County, Wyoming for this analysis
+# look at the total animal sales and filter to similar values to Park County
+sales <- read_csv("data/original/NASS_data/animal_sales_totals.csv")
+sales$Value <- gsub(",","",sales$Value)
+sales$Value <- as.numeric(sales$Value)
+
+# park county is 24,112,000 making range plus and minus 2
+
+park.range <- sales %>% 
+  filter(Value %in% (22112000:26112000)) 
+
+new <- cattle_sales[cattle_sales$County %in% c("HILL", "POWELL", "SWEET GRASS", "UINTA"), ] 
+
+median <- median(new$Value)
+
+
+# back to the spatial dataset
+cattlesales.spatial[is.na(cattlesales.spatial)] <- median
 
 
 
