@@ -17,8 +17,10 @@ r <- raster("data/template_raster.tif") %>%
 herds <- raster("data/processed/all_nodes.tif")
 
 # Economic Intervention Scenario ------------------------------------------
-econ.data <- raster("data/wildlife_model_tifs/econ_incentive_layer.tif")
-bison.inc <- raster("data/wildlife_model_tifs/bis_inc.tif")
+econ.data <- raster("data/wildlife_model_tifs/econ.map.tif") %>% 
+  terra::resample(., r)
+bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
+  terra::resample(., r)
 econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
@@ -41,8 +43,9 @@ writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = T
 
 # Tribal Governance Scenario ----------------------------------------------
 tribal.wildlife <- raster("data/wildlife_model_tifs/tribal_wildlife_gov_tract.tif") %>% 
-  resample(., bison.inc) 
-bison.inc <- raster("data/wildlife_model_tifs/bis_inc.tif")
+  terra::resample(., r)
+bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
+  terra::resample(., r)
 tribal.scenario <- 1-(bison.inc+tribal.wildlife)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
