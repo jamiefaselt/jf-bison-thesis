@@ -13,7 +13,8 @@ r <- raster("data/template_raster.tif")
 
 #bison increase preference from Kate's model (made in the wildlife.gov repo)
 # this shows the MRP estimate of the proportion of each census tract that supports bison increasing somewhat and increasing greatly
-bis.inc <- raster("data/wildlife_model_tifs/bison_decrease_layer.tif") 
+bis.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
+  terra::resample(., r)
 plot(bis.inc)
 bis.inc 
 
