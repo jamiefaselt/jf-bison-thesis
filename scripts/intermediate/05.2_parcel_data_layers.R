@@ -14,13 +14,11 @@ rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
 
-
 # bring in hsi and temp raster
 r <- raster("data/template_raster.tif")
 #bring in counties
 counties <- tigris::counties()
 # make columns match to caddat
-#counties$NAME <- toupper(counties$NAME)
 counties <- rename(counties, State.ANSI = STATEFP)
 counties <- rename(counties, County.ANSI = COUNTYFP)
 counties$State.ANSI <- as.numeric(counties$State.ANSI)
@@ -28,6 +26,8 @@ counties$County.ANSI <- as.numeric(counties$County.ANSI)
 mt.counties<-counties %>% filter(State.ANSI %in%  c("30"))
 mt.counties<-st_transform(mt.counties,st_crs(r))
 cty <- mt.counties %>% st_transform(., st_crs(r))
+cty$cty.area <- st_area(cty)
+cty$cty.area <- as.numeric(cty$cty.area)
 
 #bring in protected areas
 mt.desig <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Designation_StateMT.shp") %>% 
@@ -38,15 +38,18 @@ mt.proc <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Proclamatio
   st_make_valid() %>% 
   st_transform(., st_crs(r)) %>% 
   st_as_sf()
+# drop irrelevant designations
 mt.proc<-subset(mt.proc, Loc_Ds!="WMD" & Loc_Ds!="D1" & Loc_Ds!="D2")
 
-
+# join them
 mt.join <- bind_rows(mt.proc, mt.desig)
 
+# find out where they don't overlap with one of the pa datasets
 diffPoly <- st_difference(mt.join, st_union(mt.proc))
 
 plot(st_geometry(diffPoly))
 
+# join that with the padus dataset -- should now have both pas with no overlap
 mt.join.new <- bind_rows(diffPoly, mt.proc)
 
   
@@ -65,7 +68,7 @@ pa.cty.area <- cty %>%
 # fix the NAs
 pa.cty.area$PAarea[is.na(pa.cty.area$PAarea)] = 0
 # make a new column for the total number of non protected land area
-pa.cty.area <- mutate(pa.cty.area, nonPAarea = ALAND - as.numeric(PAarea))
+pa.cty.area <- mutate(pa.cty.area, nonPAarea = cty.area - as.numeric(PAarea))
 head(pa.cty.area)
 
 # bring in data from parcels and calculate the total number
@@ -84,64 +87,18 @@ parcel.dens <- st_as_sf(parcel.dens)
 #st_write(parcl.jn, "parcel.density.mt.shp")
 mt.pd.rast<-fasterize::fasterize(parcel.dens, r, field = 'parceldensity')
 plot(mt.pd.rast)
-mt.pd <- rescale01(mt.pd.rast)
-plot(mt.pd)
-writeRaster(mt.pd, "data/processed/montana_pd.tif")
+writeRaster(mt.pd.rast, "data/processed/montana_pd.tif", overwrite = TRUE)
 
-old.pd <- raster("data/raster_layers/parcel_density_layer.tif")
+
 # bring back in wyoming parcel data to join and save as one tif
-wy.parcl.rast <- raster("data/processed/wy_parcel_density.tif")
+wy.pd.rast <- raster("data/processed/wy_parcel_density.tif")
 plot(wy.parcl.rast)
-wy.pd <- rescale01(wy.parcl.rast)
-mtwy.pd <- merge(mt.pd, wy.pd)
+mtwy.pd <- merge(mt.pd.rast, wy.pd.rast)
 plot(mtwy.pd)
+mtwy.pd <- rescale01(mtwy.pd)
 writeRaster(mtwy.pd, "data/raster_layers/parcel_density_layer.tif", overwrite = TRUE)
 
+mtwy.pd <- raster("data/raster_layers/parcel_density_layer.tif")
+plot(mtwy.pd)
 # by the end of 05.1 and 05.2 parcel scripts should have a raster layer showing parcel density for each county in study area. did this by taking the protected area total for each county and subtracting it from the total county area to get "parcelable land area" -- then bringing in the parcel data, calculating the number of parcels in each county, then calculating parcel density by total parcels/non pa area then converting it to hectares since that is the standard metric for parcel density 
 
-
-
-
-
-
-
-
-
-
-############## can stop here unless I opt for including stats on parcels
-############## need to keep the Wyoming script run for the objects to work below (did not want to save each individually before the merge)
-
-parcl.jn <- st_drop_geometry(mt.parcels)%>% 
-  left_join(., pa.cty.area, by = c("CountyName"= "NAME")) %>% 
-  mutate(., parcelratio = TotalAcres/nonPAarea) %>% 
-  group_by(GEOID) %>% 
-  summarize(., medratio = median(parcelratio),
-            maxratio = max(parcelratio),
-            minratio = min(parcelratio),
-            sdratio = sd(parcelratio))
-parcl.jn.stats <- left_join(cty, parcl.jn)
-parcl.stats <- st_as_sf(parcl.jn.stats)
-
-parcl.max.rast<-fasterize::fasterize(parcl.stats, r, field = 'maxratio')
-plot(parcl.max.rast)
-parcl.med.rast<-fasterize::fasterize(parcl.stats, r, field = 'medratio')
-plot(parcl.med.rast)
-parcl.min.rast<-fasterize::fasterize(parcl.stats, r, field = 'minratio')
-plot(log(parcl.min.rast))
-parcl.sd.rast<-fasterize::fasterize(parcl.stats, r, field = 'sdratio')
-plot(parcl.sd.rast)
-
-writeRaster(parcl.max.rast, "Raster_Layers/singlestate/mt.parcel.maxratio.tif")
-writeRaster(parcl.med.rast, "Raster_Layers/singlestate/mt.parcel.medratio.tif")
-writeRaster(parcl.sd.rast, "Raster_Layers/singlestate/mt.parcel.sdratio.tif")
-
-mt.med.ratio <- rescale01(parcl.med.rast)
-plot(mt.med.ratio)
-wy.med.ratio <- raster("/users/jamiefaselt/jf_resist/Raster_Layers/singlestate/wy.parcel.medratio.tif")
-plot(wy.med.ratio)
-wy.med.ratio <- rescale01(wy.med.ratio)
-
-mtwy.med.ratio <- merge(mt.med.ratio, wy.med.ratio)
-plot(mtwy.med.ratio)
-mtwy.med.ratio.inverse <- 1/mtwy.med.ratio
-plot(mtwy.med.ratio.inverse)
