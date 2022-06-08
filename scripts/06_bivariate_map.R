@@ -254,5 +254,5 @@ p
 
 
 
-ggsave(here::here("plots/fig3_draft_fullbase.png"), plot =p)
+ggsave(here::here("plots/bivariate_map.png"), plot =p)
 
