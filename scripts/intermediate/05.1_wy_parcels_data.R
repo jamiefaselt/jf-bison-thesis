@@ -1,5 +1,3 @@
-# wy parcels clean
-
 library(tigris)
 library(ggplot2)
 library(tidyverse)
@@ -9,44 +7,54 @@ library(raster)
 library(terra)
 library(dplyr)
 library(rgdal)
-
 # bring in hsi and temp raster
 r <- raster("data/template_raster.tif")
 #bring in counties
-counties <- tigris::counties()
+counties <- tigris::counties(state=c("WY", "MT"))
 # make columns match to caddat
 counties <- rename(counties, State.ANSI = STATEFP)
 counties <- rename(counties, County.ANSI = COUNTYFP)
-counties$State.ANSI <- as.numeric(counties$State.ANSI)
-counties$County.ANSI <- as.numeric(counties$County.ANSI)
-wy.counties<-counties %>% filter(State.ANSI %in%  c("56"))
-cty<-st_transform(wy.counties,st_crs(r))
+#counties$State.ANSI <- as.numeric(counties$State.ANSI)#don't do this; these should stay characters, it may not cause errors here but it will if there are leading 0's
+#counties$County.ANSI <- as.numeric(counties$County.ANSI)
+#wy.counties<-counties %>% filter(State.ANSI %in%  c("56"))
+cty<-st_transform(counties,st_crs(r))
 cty$cty.area <- st_area(cty)
 cty$cty.area <- as.numeric(cty$cty.area) 
- 
+
 
 ##### PA Area #####
+# Function to fix PADUS geometries ----------------------------------------
+
 # need to bring both of these datasets in 
 wy.desig <- st_read("data/original/PADUS2_1_StateWY_Shapefile/PADUS2_1Designation_StateWY.shp") %>% 
-  st_make_valid() %>% 
-  st_transform(., st_crs(r))
+  st_make_valid() 
 wy.proc <- st_read("data/original/PADUS2_1_StateWY_Shapefile/PADUS2_1Proclamation_StateWY.shp") %>% 
-  st_make_valid() %>% 
-  st_transform(., st_crs(r))
-wy.proc <- wy.proc[!(wy.proc$Des_Tp=="TRIBL" ),]
+  st_make_valid() 
+mt.desig <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Designation_StateMT.shp") %>% 
+  st_make_valid()
+mt.proc <- st_read("data/original/PADUS2_1_StateMT_Shapefile/PADUS2_1Proclamation_StateMT.shp") %>% 
+  st_make_valid()
+procs <- bind_rows(wy.proc, mt.proc)
+des <- bind_rows(wy.desig, mt.desig)
+#HERE WE SHOULD BE DROPPING ANY AND ALL Loc_Ds values or Des_Tp that you don't want. I saw some Farm Service Agency service area things in there and the wetland areas (we are doing everything for both states now so may as well get them all out here)
+wy.proc <- wy.proc[!(wy.proc$Des_Tp=="TRIBL" ),] #Do the parcels show up within the Tribal designations?
 
-# joining to compare with just one of them to find out where they don't overlap
-wy.join <- bind_rows(wy.proc, wy.desig)
+int <- st_intersection(des, procs) #get intersection of procs with des
 
-diffPoly.wy <- st_difference(wy.join, st_union(wy.proc))
+dif <- st_difference(des, st_union(st_geometry(int)), s2_snap_distance(400)) #remove that intersection from des.
+dif.v <- st_make_valid(dif)
+#join back to the procs dataset
+wy.pas <- bind_rows(wy.proc, dif.v)
+wy.pas <- st_union(wy.pas, by_feature = TRUE) %>%  #clean up geomtries
+  st_transform(.,st_crs(r))
+wy.pas.b <- st_buffer(wy.pas, dist=0) #fix some weird geometries that come from the st_dif
 
-# join the areas that don't overlap with one of the PADUS datasets
-wy.join.new <- bind_rows(diffPoly.wy, wy.proc)
-wy.pas <- wy.join.new
+
+
 
 
 #get the total area of protected acres for each county
-s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],wy.pas)})
+s12 = lapply(1:nrow(cty), function(i){st_intersection(cty[i,],wy.pas.b)})
 tst <- lapply(1:length(s12), function(x){
   s12[[x]] %>% 
     group_by(GEOID) %>% 
