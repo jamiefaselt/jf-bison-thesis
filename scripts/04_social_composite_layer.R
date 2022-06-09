@@ -1,5 +1,8 @@
 # composite social layer
-
+# rescale function to use later on for combining rasters
+rescale01 <- function(r1) {
+  r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
+}
 
 library(raster)
 library(terra)
@@ -8,6 +11,7 @@ library(sf)
 library(ggmap)
 library(rgdal)
 library(maptools)
+library(terra)
 
 herds <- st_read("data/processed/herd_shapefile_outline.shp")
 
@@ -20,8 +24,11 @@ bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif")
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
 landval.pnas <- raster("data/raster_layers/landval_layer.tif")
-parceldensity <- raster("data/raster_layers/parcel_density_layer.tif")
-
+parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
+  terra::resample(., r) %>% 
+  rescale01(.)
+  
+plot(parceldensity)
 
 # fuzzy sum approach
 rc1.1m <- 1-bis.dec
