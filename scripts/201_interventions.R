@@ -24,7 +24,9 @@ bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>%
 econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
-parceldensity <- raster("data/raster_layers/parcel_density_layer.tif")
+parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
+  terra::resample(., r) %>% 
+  rescale01(.)
 landval.pnas <- raster("data/raster_layers/landval_layer.tif")
 
 # fuzzy sum approach
@@ -42,14 +44,16 @@ plot(econ.scenario)
 writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
 
 # Tribal Governance Scenario ----------------------------------------------
-tribal.wildlife <- raster("data/wildlife_model_tifs/tribal_wildlife_gov_tract.tif") %>% 
+tribal.wildlife <- raster("data/wildlife_model_tifs/tribal.wildlife.map.tif") %>% 
   terra::resample(., r)
 bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
   terra::resample(., r)
 tribal.scenario <- 1-(bison.inc+tribal.wildlife)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
-parceldensity <- raster("data/raster_layers/parcel_density_layer.tif")
+parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
+  terra::resample(., r) %>% 
+  rescale01(.)
 landval.pnas <- raster("data/raster_layers/landval_layer.tif")
 
 # fuzzy sum approach
