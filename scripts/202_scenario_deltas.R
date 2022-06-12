@@ -17,9 +17,12 @@ implement.cs <- raster(here::here('circuitscape_outputs/social_cs/social_out_cum
   mask(., r)
 biophys.cs <- raster(here::here('circuitscape_outputs/biophys_cs/biophys_out_cum_curmap.asc')) %>% 
   mask(., r)
-econ.cs <- raster(here::here('circuitscape_outputs/econ_cs/econ_scenario_out_cum_curmap.asc'))
-gov.cs <- raster(here::here('circuitscape_outputs/gov_cs/tribal_scenario_out_cum_curmap.asc'))
-new.node.cs <- raster(here::here("circuitscape_outputs/newherd_shortcircuit_cs/newnode_out_cum_curmap.asc"))
+econ.cs <- raster(here::here('circuitscape_outputs/econ_cs/econ_scenario_out_cum_curmap.asc'))  %>% 
+  mask(., r)
+gov.cs <- raster(here::here('circuitscape_outputs/gov_cs/tribal_scenario_out_cum_curmap.asc'))  %>% 
+  mask(., r)
+new.node.cs <- raster(here::here("circuitscape_outputs/newherd_shortcircuit_cs/newnode_out_cum_curmap.asc"))  %>% 
+  mask(., r)
 
 # convert to dataframes ---------------------------------------------------
 
