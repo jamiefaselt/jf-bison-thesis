@@ -20,7 +20,7 @@ r <- raster("data/template_raster.tif")
 
 # Need to run scripts in scripts/intermediate folder once -----------------
 
-bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") 
+bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") # fixed NAs already
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
 landval.pnas <- raster("data/raster_layers/landval_layer.tif")
@@ -28,8 +28,6 @@ parceldensity <- raster("data/processed/parcel_dens_update.tif") %>%
   terra::resample(., r) %>% 
   rescale01(.)
   
-plot(parceldensity)
-
 # fuzzy sum approach
 rc1.1m <- 1-bis.dec
 rc2.1m <- 1-cattle.sales
@@ -42,7 +40,6 @@ plot(fuz.sum)
 writeRaster(fuz.sum, "data/processed/social_fuzsum.tif", overwrite = TRUE)
 social_resistance <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(social_resistance)
-plot(st_geometry(herds), add= TRUE)
 
 writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif", overwrite = TRUE)
 

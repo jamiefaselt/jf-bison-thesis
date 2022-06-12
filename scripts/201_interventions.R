@@ -1,3 +1,6 @@
+
+# in this script I am following the same method for creating the implementation layer, but manipulating the values in the bis.inc/compliment of that layer based on mrp estimates of economic incentive preference and tribal wildlife incentive. The final intervention scenario is for a short circuit region, in the last 
+
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
@@ -10,24 +13,39 @@ library(ggmap)
 library(rgdal)
 library(maptools)
 
+
+
+# Bring in the data to use for all ----------------------------------------
+
+
 cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
 r <- raster("data/template_raster.tif") %>% 
   mask(., cattle)
 
 herds <- raster("data/processed/all_nodes.tif")
 
-# Economic Intervention Scenario ------------------------------------------
-econ.data <- raster("data/wildlife_model_tifs/econ.map.tif") %>% 
+bison.inc <- raster("data/wildlife_model_tifs/bis.inc.fill.tif") %>% 
   terra::resample(., r, mask = TRUE)
-bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
-  terra::resample(., r, mask = TRUE)
-econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
 parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
   terra::resample(., r) %>% 
   rescale01(.)
 landval.pnas <- raster("data/raster_layers/landval_layer.tif")
+
+# Economic Intervention Scenario ------------------------------------------
+econ <- raster("data/wildlife_model_tifs/econ.map.tif") %>% 
+  terra::resample(., r, mask = TRUE)
+# need to fix the area in this by filling in the na area with the county level estimates
+# need to fix the NA area
+spat <- as(econ, "SpatRaster")
+new <- terra::focal(spat, w = 33, fun = "modal", na.policy="only", na.rm=TRUE)
+plot(new, colNA="red")
+new <- as(new, "Raster")
+econ.fill <- mask(new, r)
+
+# make into resistance 
+econ.intervention <- 1-(bison.inc+ econ.fill)
 
 # fuzzy sum approach
 rc1.1m <- 1-econ.intervention
@@ -41,20 +59,22 @@ plot(fuz.sum)
 #make resistance
 econ.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
 plot(econ.scenario)
+plot(econ.scenario, colNA="red")
+
 writeRaster(econ.scenario, "data/raster_layers/econ_scenario.tif", overwrite = TRUE)
 
 # Tribal Governance Scenario ----------------------------------------------
-tribal.wildlife <- raster("data/wildlife_model_tifs/tribal.wildlife.map.tif") %>% 
+gov <- raster("data/wildlife_model_tifs/tribal.wildlife.map.tif") %>% 
   terra::resample(., r)
-bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
-  terra::resample(., r)
+# need to fix the NA area
+spat <- as(gov, "SpatRaster")
+new <- terra::focal(spat, w = 33, fun = "modal", na.policy="only", na.rm=TRUE)
+plot(new, colNA="red")
+new <- as(new, "Raster")
+tribal.wildlife <- mask(new, r)
+
+# turn into a resistance scenario
 tribal.scenario <- 1-(bison.inc+tribal.wildlife)
-cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
-repub <- raster("data/raster_layers/repub_vote_layer.tif")
-parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
-  terra::resample(., r) %>% 
-  rescale01(.)
-landval.pnas <- raster("data/raster_layers/landval_layer.tif")
 
 # fuzzy sum approach
 rc1.1m <- 1-tribal.scenario
@@ -77,6 +97,7 @@ biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
 extent(tribal.scenario)==extent(econ.scenario)
 extent(tribal.scenario)==extent(implement.resist)
 extent(tribal.scenario)==extent(biophys.resist)
+
 # DOI Friendly Scenario ---------------------------------------------------
 
 # template raster
