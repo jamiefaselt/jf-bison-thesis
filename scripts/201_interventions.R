@@ -18,9 +18,9 @@ herds <- raster("data/processed/all_nodes.tif")
 
 # Economic Intervention Scenario ------------------------------------------
 econ.data <- raster("data/wildlife_model_tifs/econ.map.tif") %>% 
-  terra::resample(., r)
+  terra::resample(., r, mask = TRUE)
 bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
-  terra::resample(., r)
+  terra::resample(., r, mask = TRUE)
 econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
