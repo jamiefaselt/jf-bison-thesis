@@ -18,9 +18,6 @@ rescale01 <- function(r1) {
 
 #template raster
 r <- raster("data/template_raster.tif")
-cattle <- raster("data/raster_layers/cattle_sales_layer.tif") # using this as my mask since it has data for the area
-r <- raster("data/template_raster.tif") %>% 
-  mask(., cattle)
 herds <- st_read("data/processed/herd_shapefile_outline.shp")
 # resample the hsi layer to match the extent and resolution of template raster
 hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
