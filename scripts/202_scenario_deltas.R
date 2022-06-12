@@ -8,9 +8,8 @@ library(dplyr)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
-cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
-r <- raster("data/template_raster.tif") %>% 
-  mask(., cattle)
+
+r <- raster("data/template_raster.tif") 
 
 # load inital cs layers ---------------------------------------------------
 implement.cs <- raster(here::here('circuitscape_outputs/social_cs/social_out_cum_curmap.asc')) %>% 

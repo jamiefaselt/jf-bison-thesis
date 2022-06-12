@@ -16,11 +16,7 @@ library(maptools)
 
 
 # Bring in the data to use for all ----------------------------------------
-
-
-cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
-r <- raster("data/template_raster.tif") %>% 
-  mask(., cattle)
+r <- raster("data/template_raster.tif") 
 
 herds <- raster("data/processed/all_nodes.tif")
 
