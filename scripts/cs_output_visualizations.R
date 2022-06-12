@@ -35,7 +35,7 @@ plot(st_geometry(PAs, add = TRUE))
 
 ##### tribal scenario CS #####
 tribal_layer <- raster("data/raster_layers/tribal_scenario.tif")
-tribal.cs <- raster("circuitscape_outputs//tribal_scenario_out_cum_curmap.asc")
+tribal.cs <- raster("circuitscape_outputs/gov_cs/tribal_scenario_out_cum_curmap.asc")
 plot(tribal.cs)
 plot(log(tribal.cs))
 quantile(tribal.cs)
