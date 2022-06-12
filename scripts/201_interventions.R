@@ -71,7 +71,12 @@ plot(tribal.scenario)
 writeRaster(tribal.scenario, "data/raster_layers/tribal_scenario.tif", overwrite = TRUE)
 
 
-
+# make sure all the extents match
+implement.resist <- raster("data/raster_layers/social_resistance_layer.tif")
+biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
+extent(tribal.scenario)==extent(econ.scenario)
+extent(tribal.scenario)==extent(implement.resist)
+extent(tribal.scenario)==extent(biophys.resist)
 # DOI Friendly Scenario ---------------------------------------------------
 
 # template raster
