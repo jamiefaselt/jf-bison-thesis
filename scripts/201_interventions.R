@@ -18,9 +18,9 @@ herds <- raster("data/processed/all_nodes.tif")
 
 # Economic Intervention Scenario ------------------------------------------
 econ.data <- raster("data/wildlife_model_tifs/econ.map.tif") %>% 
-  terra::resample(., r)
+  terra::resample(., r, mask = TRUE)
 bison.inc <- raster("data/wildlife_model_tifs/bis.increase.map.tif") %>% 
-  terra::resample(., r)
+  terra::resample(., r, mask = TRUE)
 econ.intervention <- 1-(bison.inc+ econ.data)
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
@@ -71,7 +71,12 @@ plot(tribal.scenario)
 writeRaster(tribal.scenario, "data/raster_layers/tribal_scenario.tif", overwrite = TRUE)
 
 
-
+# make sure all the extents match
+implement.resist <- raster("data/raster_layers/social_resistance_layer.tif")
+biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
+extent(tribal.scenario)==extent(econ.scenario)
+extent(tribal.scenario)==extent(implement.resist)
+extent(tribal.scenario)==extent(biophys.resist)
 # DOI Friendly Scenario ---------------------------------------------------
 
 # template raster
