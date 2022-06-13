@@ -45,6 +45,7 @@ st_crs(apr)==st_crs(hsi)
 st_crs(yellowstone)==st_crs(hsi)
 mtwy <- mtwy %>% st_transform(crs=st_crs(hsi))
 mt <- mt %>% st_transform(crs=st_crs(hsi))
+st_crs(mtwy)==st_crs(hsi)
 
 #combine them into one shapefile
 yellowstone <- yellowstone %>%
@@ -68,7 +69,7 @@ values(r) <- 1:ncell(r)
 plot(r)
 
 # by the end of this script have a template raster matched to my largest raster (the habitat suitability layer or hsi) that is cropped to a bounding box of montana and 50 km south of the yellowstone herd
-
+#You don't save this here so the call to read it in later should fail (it doesn't because you seem to have downloaded it somewhere?)
 
 # Cattle Sales Layer ----------------------------------------------------
 rescale01 <- function(r1) {
@@ -86,11 +87,13 @@ counties <- tigris::counties() %>%
 counties$NAME <- toupper(counties$NAME)
 counties <- rename(counties, State.ANSI = STATEFP)
 counties <- rename(counties, County.ANSI = COUNTYFP)
-counties$State.ANSI <- as.numeric(counties$State.ANSI)
-counties$County.ANSI <- as.numeric(counties$County.ANSI)
+
 #plot(counties) #checking and this doesn't have weird gaps yet
 cattle_sales$Value <- gsub(",","",cattle_sales$Value)
 cattle_sales$Value <- as.numeric(cattle_sales$Value)
+cattle_sales$State.ANSI <- as.character(cattle_sales$State.ANSI) %>% str_pad(., width=2, side = "left", pad= "0")
+cattle_sales$County.ANSI <- as.character(cattle_sales$County.ANSI) %>% str_pad(., width=3, side = "left", pad= "0")
+
 # join
 cattlesales.spatial <- left_join(counties, cattle_sales)
 # there are NA values for non-disclosed counties-- need Park County, Wyoming for this analysis
@@ -99,13 +102,14 @@ sales <- read_csv("data/original/NASS_data/animal_sales_totals.csv")
 sales$Value <- gsub(",","",sales$Value)
 sales$Value <- as.numeric(sales$Value)
 # park county is 24,112,000 making range plus and minus 2
-park.range <- sales %>% 
-  filter(Value %in% (22112000:26112000)) 
-new <- cattle_sales[cattle_sales$County %in% c("HILL", "POWELL", "SWEET GRASS", "UINTA"), ] 
-median <- median(new$Value)
+sales$rank <- rank(sales$Value)
+park.rank <- sales[sales$County == "PARK" & sales$State == "WYOMING",]$rank
+similar.counties <- sales[which(sales$rank >= (park.rank-2) & sales$rank <= (park.rank+2) & sales$rank != park.rank),]$County
+
+median <- median(similar.counties$Value)
 
 # back to the spatial dataset
-cattlesales.spatial[is.na(cattlesales.spatial)] <- median
+cattlesales.spatial[is.na(cattlesales.spatial$Value), 'Value'] <- median #Not worried about Platte county as it will fall outside of the study area, but note that it's getting a median based on counties similar to Park
 # double check projection
 st_crs(counties) == st_crs(cattlesales.spatial) #true
 st_is_valid(cattlesales.spatial) #true
@@ -113,7 +117,7 @@ st_is_valid(cattlesales.spatial) #true
 cattle.sales.sub <- cattlesales.spatial %>% 
   dplyr::select(geometry,Value,County.ANSI,State.ANSI)
 class(cattle.sales.sub)
-cattlesales <- st_as_sf(cattle.sales.sub)
+#cattlesales <- st_as_sf(cattle.sales.sub)
 #make this a raster with temp.raster already loaded
 rstr<<-fasterize::fasterize(cattlesales.spatial, r, field = 'Value')
 hist(rstr)
@@ -157,67 +161,45 @@ rescale01 <- function(r1) {
 votes2000.2020 <- read_csv("data/original/pres_voting/countypres_2000-2020.csv")
 colnames(votes2000.2020)
 head(votes2000.2020)
-counties <- tigris::counties()
-wy.counties<-counties %>% filter(STATEFP %in%  c("56"))
+counties <- tigris::counties(st = c("MT", "WY"))
+#wy.counties<-counties %>% filter(STATEFP %in%  c("56"))
 r <- raster("Data/template_raster.tif")
-wy.counties<-st_transform(wy.counties,st_crs(r))
-wy.counties$NAME <- toupper(wy.counties$NAME)
-wy.counties <- rename(wy.counties, "county_name" = "NAME")
+counties<-st_transform(counties,st_crs(r))
+counties$NAME <- toupper(counties$NAME)
+counties <- rename(counties, "county_name" = "NAME")
 
-votes.wy <- votes2000.2020 %>% filter(state %in% c("WYOMING"))
-votes.wy <- votes.wy %>% filter(party %in% c("REPUBLICAN"))
-wy.rep <- votes.wy %>% mutate(., percentrepub= (candidatevotes/totalvotes)*100)
-wy.rep.avg <- wy.rep %>%
-  group_by(., county_name) %>%
+votes <- votes2000.2020 %>% filter(state %in% c("WYOMING", "MONTANA")) %>% 
+  filter(party %in% c("REPUBLICAN")) %>% 
+  mutate(., percentrepub= (candidatevotes/totalvotes)*100) %>%
+  group_by(., county_fips) %>%
   summarise(avgrep = mean(percentrepub))
-wy.rep.avg.join <- left_join(wy.counties, wy.rep.avg) 
-wy.rep.avg.join <- st_as_sf(wy.rep.avg.join)
-wy.rep.avg.rast<-fasterize::fasterize(wy.rep.avg.join, r, field = 'avgrep')
-plot(wy.rep.avg.rast)
-####################################################
-# Montana voting
-mt.counties<-counties %>% filter(STATEFP %in%  c("30"))
-r <- raster("Data/template_raster.tif")
-mt.counties<-st_transform(mt.counties,st_crs(r))
-mt.counties$NAME <- toupper(mt.counties$NAME)
-mt.counties <- rename(mt.counties, "county_name" = "NAME")
 
-votes.mt <- votes2000.2020 %>% filter(state %in% c("MONTANA"))
-votes.mt <- votes.mt %>% filter(party %in% c("REPUBLICAN"))
-mt.rep <- votes.mt %>% mutate(., percentrepub= (candidatevotes/totalvotes)*100)
-mt.rep.avg <- mt.rep %>%
-  group_by(., county_name) %>%
-  summarise(avgrep = mean(percentrepub))
-mt.rep.avg.join <- left_join(mt.counties, mt.rep.avg) 
-mt.rep.avg.join <- st_as_sf(mt.rep.avg.join)
-mt.rep.avg.rast<-fasterize::fasterize(mt.rep.avg.join, r, field = 'avgrep')
-plot(mt.rep.avg.rast)
 
-##############################################################################
-# merge, rescale and save
-mt.rep.avg.rast
-wy.rep.avg.rast
-mtwy.republican <- merge(mt.rep.avg.rast, wy.rep.avg.rast)
-plot(mtwy.republican)
-rescale <- rescale01(mtwy.republican)
+rep.avg.join <- left_join(counties, votes, by = c("GEOID" = "county_fips")) 
+#wy.rep.avg.join <- st_as_sf(wy.rep.avg.join)
+rep.avg.rast<-fasterize::fasterize(rep.avg.join, r, field = 'avgrep')
+plot(rep.avg.rast)
+rescale <- rescale01(rep.avg.rast)
 plot(rescale)
 writeRaster(rescale, "data/raster_layers/repub_vote_layer.tif", overwrite = TRUE)
 
 
 # Land Value Layer from PNAS ----------------------------------------------
-landval <- raster("data/original/places_fmv_pnas_dryad/places_fmv_all.tif")
-landval <- projectRaster(from = landval, to= r)
-landval.mask <- mask(landval, r)
-plot(landval.mask)
+library(terra)
+landval <- terra::rast("data/original/places_fmv_pnas_dryad/places_fmv_all.tif")
+r.rast <- terra::rast(r)
+landval <- terra::project(landval, r.rast)
+
 
 # need to deal with NAs where there are large bodies of water
-spat <- as(landval.mask, "SpatRaster")
-new <- terra::focal(spat, w = 33, fun = "modal", na.policy="only", na.rm=TRUE)
-plot(new, colNA="red")
-new <- as(new, "Raster")
-new <- mask(new, r)
+landval.rstr <- as(landval, "Raster")
+landval.msk <- mask(landval.rstr, r)
+#new <- terra::focal(spat, w = 33, fun = "modal", na.policy="only", na.rm=TRUE)
+#plot(new, colNA="red")
+#new <- as(new, "Raster")
+#new <- mask(new, r)
 
-rescale <- rescale01(new)
+rescale <- rescale01(landval.msk)
 plot(rescale) # fixed the nas!
 writeRaster(rescale, "data/Raster_Layers/landval_layer.tif", overwrite = TRUE)
 
