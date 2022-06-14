@@ -1,5 +1,4 @@
 # biophysical resistance layer
-# just once need to run intermediate/hmi_layer for this resistance layer
 
 library(raster)
 library(terra)
@@ -17,41 +16,47 @@ rescale01 <- function(r1) {
 }
 
 #template raster
-r <- raster("data/template_raster.tif")
-herds <- st_read("data/processed/herd_shapefile_outline.shp")
+r <- rast("data/template_raster.tif")
+landval <- rast("data/raster_layers/landval_layer.tif") #loading this to mask lakes from biophys layer 
+lake.mask <- is.na(landval)
+lake.mask[lake.mask != 1] <- NA
+lake.mask <- mask(lake.mask, r)
+plot(lake.mask)
+#herds <- st_read("data/processed/herd_shapefile_outline.shp")
 # resample the hsi layer to match the extent and resolution of template raster
-hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
-hsi.crop <- crop(hsi, r)
-hsi.crop[hsi.crop>73] <- NA # it says the max is 73 but the histogram shows that there are values over 100, Brock thinks this is from converting the file from ArcGIS
-
-hsi.resample <- terra::resample(hsi.crop, r, na.rm = TRUE) 
+hsi <- rast("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
+hsi.sa <- terra::project(hsi, r) #this crops and resamples to the proper extent
+hsi.sa[hsi.sa>73] <- NA # it says the max is 73 but the histogram shows that there are values over 100, Brock thinks this is from converting the file from ArcGIS
+hsi.sa <- mask(hsi.sa, r)
 
 #write this for future use so I won't have to resample again!
-writeRaster(hsi.resample, "data/processed/hsi_resample.tif", overwrite = TRUE) 
+writeRaster(hsi.sa, "data/processed/hsi_resample.tif", overwrite = TRUE) 
 
 # take the inverse of habitat suitability for resistance
-hsi.resample <- raster("data/processed/hsi_resample.tif")
-hsi.inverse <- 1/hsi.resample
+#hsi.resample <- raster("data/processed/hsi_resample.tif")
+hsi.inverse <- 1/hsi.sa
 plot(hsi.inverse)
-table(is.na(hsi.resample[]))
-plot(hsi.resample, colNA="red")
+#table(is.na(hsi.resample[]))
+plot(hsi.inverse, colNA="red")
 
 # rescale to 0-1 for standardization
 # set the NA values to 1 for highest resistance (won't run in CS otherwise)
-hsi.rescale <- rescale01(hsi.inverse)
-hsi.rescale[is.na(hsi.rescale)]=1
-hsi.rescale
+hsi.rescale <- rescale01(raster(hsi.inverse))
+hsi.rescale[is.na(hsi.rescale)]<-1
+hsi.rescale[raster(lake.mask)] <- NA
+hsi.rescale <- mask(hsi.rescale, raster(r))
+
 
 # bring in the human modification layer
-hmi <- raster("data/original/Human_Modification_Index/prj.adf")
-hmi.resample <- terra::resample(hmi,r)
+hmi <- rast("data/original/Human_Modification_Index/prj.adf")
+hmi.resample <- raster(terra::project(hmi,r))
 plot(hmi.resample)
 ext(hmi.resample)
 ext(r)
 st_crs(r)==st_crs(hmi.resample)
 writeRaster(hmi.resample, "data/processed/hmi_crop.tif", overwrite = TRUE)
 
-hmi <- raster::raster("data/processed/hmi_crop.tif")
+#hmi <- raster::raster("data/processed/hmi_crop.tif")
 
 # fuzzy sum approach to combine them from Theobald 2013
 fuzzysum <- function(r1, r2) {
@@ -62,13 +67,17 @@ fuzzysum <- function(r1, r2) {
 biophys_fuzsum <- fuzzysum(hsi.rescale, hmi.resample)
 plot(biophys_fuzsum, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 
+elev <- getData(name='alt', country= 'USA')[[1]]
+slope <- terrain(elev, v="slope", unit="degrees")
+slope.rast <- rast(slope)
+slope.sa <- terra::project(slope.rast, r)
+slope.mask <- mask(slope.sa, r)
 # make into resistance surface
-biophys_resistance <- (1+biophys_fuzsum)^10
-biophys_mask <- mask(biophys_resistance, r)
-plot(biophys_mask, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
+biophys_resistance <- ((1+biophys_fuzsum)^10) + (raster(slope.mask)/4)
+plot(biophys_resistance, col=plasma(256), axes = TRUE, main = "HSI+HMI Resistance Layer")
 
 #write raster (saving both gdrive and local computer)
-writeRaster(biophys_mask, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
+writeRaster(biophys_resistance, "data/raster_layers/biophys_resistance_layer.tif", overwrite = TRUE)
 
 # now we have the biophysical resistance surface based on the habitat suitability index and human modification layers combined with a fuzzy sum approach and turned into a resistance layer using methods from Dickson et al.
 
