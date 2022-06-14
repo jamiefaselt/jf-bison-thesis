@@ -11,11 +11,7 @@ library(tigris)
 library(dplyr)
 
 r <- raster("data/template_raster.tif")
-states <- tigris::states()
-mt <- states %>% filter(., NAME=="Montana", drop=TRUE)
-counties <- tigris::counties()
-mt.counties<-counties %>% filter(STATEFP %in%  c("30"))
-mt.counties<-st_transform(mt.counties,st_crs(r))
+
 
 #bring in the data, match projection and make valid 
 mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
