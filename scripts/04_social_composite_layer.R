@@ -18,7 +18,7 @@ herds <- st_read("data/processed/herd_shapefile_outline.shp")
 r <- raster("data/template_raster.tif")
 
 
-# Need to run scripts in scripts/intermediate folder once -----------------
+# Need to run scripts in scripts/intermediate folder once -----------------#is this still true?
 
 bis.dec <- raster("data/raster_layers/bison_decrease_layer.tif") # fixed NAs already
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
@@ -38,7 +38,7 @@ fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc4.1m)
 plot(fuz.sum) 
 
 writeRaster(fuz.sum, "data/processed/social_fuzsum.tif", overwrite = TRUE)
-social_resistance <- ((1+fuz.sum)^10 + landval.pnas/4)
+social_resistance <- (1+fuz.sum)^10 + (landval.pnas/4)
 plot(social_resistance)
 
 writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif", overwrite = TRUE)
@@ -46,7 +46,7 @@ writeRaster(social_resistance, "data/raster_layers/social_resistance_layer.tif",
 
 # make a null raster based on min social resistance 
 cellStats(social_resistance, min)
-r <- setMinMax(r)
+#r <- setMinMax(r)
 values(r) <-cellStats(social_resistance, min)
 
 writeRaster(r, "data/processed/null_resistance_layer.tif", overwrite = TRUE)
