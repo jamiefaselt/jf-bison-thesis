@@ -18,7 +18,6 @@ library(egg)
 
 biophys.cs <- raster(here::here('circuitscape_outputs/biophys_cs/biophys_out_cum_curmap.asc'))
 biophys.resist <- raster("data/raster_layers/biophys_resistance_layer.tif")
-biophys.resist[is.na(biophys.resist[])] <- 5* cellStats(biophys.resist, max)
 
 # Load centroids ----------------------------------------------------------
 pa.cents <- st_read("data/processed/herd_centroids.shp") %>% 
