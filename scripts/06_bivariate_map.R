@@ -120,9 +120,9 @@ elev <- getData('alt', country = 'USA', download = TRUE)
 elev.proj <- projectRaster(elev[[1]], biophys.cs)
 
 
-elev.crop <- crop(elev.proj, biophys.cs) #%>% 
+#elev.crop <- mask(elev.proj, biophys.cs) #%>% 
   #mask(., r)
-elev.mod <- elev.crop *10
+elev.mod <- elev.proj *10
 slope <- terrain(elev.mod, opt='slope')
 aspect <- terrain(elev.mod, opt='aspect')
 hill = hillShade(slope, aspect, 40, 270)
