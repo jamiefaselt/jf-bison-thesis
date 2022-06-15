@@ -30,23 +30,26 @@ path3.distance <- st_area(path3)/4000
 # Load the data -----------------------------------------------------------
 d <- readRDS("data/processed/TransitionLayers/ms_tree.rds")
 biophys.tr <- readRDS("data/processed/TransitionLayers/biophystrans.rds")
-social.tr1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtrans1.rds'))
+social.tr1 <- readRDS(here::here('data/processed/TransitionLayers/socialtrans1.rds'))
+biophys.resist <- raster(here::here("data/raster_layers/biophys_resistance_layer.tif"))
+social.resist <- raster(here::here("data/raster_layers/social_resistance_layer.tif"))
 pts <- st_read("data/processed/herd_centroids.shp") %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
 pts@data[is.na(pts@data$NAME),]$NAME <- "APR"
 # Calculate the costs of the MST ------------------------------------------
 # run this function for the environment -- it is inputted into lapply below
-  mst_cost <- function(pathset, basetr, startpt){
-    mn_func <- function(x){mean(x, na.rm=TRUE)}
-    cost.mask <- mask(raster(basetr), pathset)
+  mst_cost <- function(pathset, baseresist, startpt){
+    mn_func <- function(x){1/mean(x, na.rm=TRUE)}
+    cost.mask <- mask(baseresist, pathset)
     cost.trans <- transition(cost.mask, transitionFunction = mn_func, 16)
+    cost.trans <- geoCorrection(cost.trans, type="c")
     acost <- accCost(cost.trans, pts[pts@data$NAME == startpt,])
   }
-bio.cost.list <- lapply(1:length(d[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], basetr = biophys.tr, startpt = "Yellowstone National Park"))
+bio.cost.list <- lapply(1:length(d[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], baseresist = biophys.resist, startpt = "Yellowstone National Park"))
 plot(stack(bio.cost.list))
 
-social.cost.list <- lapply(1:length(d[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], basetr = social.tr1, startpt = "Yellowstone National Park"))
+social.cost.list <- lapply(1:length(d[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], baseresist =  social.resist, startpt = "Yellowstone National Park"))
 plot(stack(social.cost.list))
 
 # extract values ----------------------------------------------------------
