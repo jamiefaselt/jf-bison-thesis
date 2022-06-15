@@ -34,16 +34,15 @@ social.tr1 <- readRDS(here::here('Data/Processed/TransitionLayers/socialtrans1.r
 pts <- st_read("data/processed/herd_centroids.shp") %>% 
   st_centroid(.) %>% 
   as(. , "Spatial")
-
+pts@data[is.na(pts@data$NAME),]$NAME <- "APR"
 # Calculate the costs of the MST ------------------------------------------
 # run this function for the environment -- it is inputted into lapply below
-mst_cost <- function(pathset, basetr, startpt){
-  mn_func <- function(x){median(x, na.rm=TRUE)}
-  cost.mask <- mask(raster(basetr), pathset)
-  cost.trans <- transition(cost.mask, transitionFunction = mn_func, 16)
-  acost <- accCost(cost.trans, pts[pts@data$NAME == startpt,])
-}
-
+  mst_cost <- function(pathset, basetr, startpt){
+    mn_func <- function(x){mean(x, na.rm=TRUE)}
+    cost.mask <- mask(raster(basetr), pathset)
+    cost.trans <- transition(cost.mask, transitionFunction = mn_func, 16)
+    acost <- accCost(cost.trans, pts[pts@data$NAME == startpt,])
+  }
 bio.cost.list <- lapply(1:length(d[[1]]), function(x)mst_cost(pathset = d[[1]][[x]], basetr = biophys.tr, startpt = "Yellowstone National Park"))
 plot(stack(bio.cost.list))
 
