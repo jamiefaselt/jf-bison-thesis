@@ -4,7 +4,6 @@ library(ggplot2)
 library(tidyverse)
 library(cmocean)
 library(sf)
-library(dplyr)
 rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
@@ -326,11 +325,11 @@ deltas <- p2 + p3 + p4 + plot_layout(guides = 'collect') & theme(legend.position
 
 triplot <- p1 + p2 + p3 + p4 + plot_annotation(tag_levels = "A", tag_suffix = ")")& theme(legend.position = "bottom", legend.justification = "center",
                                                                                      legend.margin=margin(0,0,0,0),
-                                                                                     legend.box.margin=margin(-15,-10,-10,-10))   
+                                                                                     legend.box.margin=margin(-15,-10,-5,-10))   
 
 library(cowplot)
 p <- ggdraw(triplot)  +
-  draw_plot(l, x = 0, y = 0, 
-            width = 0.24, height = 0.24) 
+  draw_plot(l, x = 0, y = 0.49, 
+            width = 0.15, height = 0.15) 
 p
 ggsave(here::here("plots/deltas.png"), plot =p)
