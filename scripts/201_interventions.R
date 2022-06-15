@@ -20,8 +20,7 @@ r <- raster("data/template_raster.tif")
 
 herds <- raster("data/processed/all_nodes.tif")
 
-bison.inc <- raster("data/wildlife_model_tifs/bis.inc.fill.tif") %>% 
-  terra::resample(., r, mask = TRUE)
+bison.inc <- raster("data/wildlife_model_tifs/bis.inc.fill.tif") #resample not necessary because this was already saved at the extent and res of r
 cattle.sales <- raster("data/raster_layers/cattle_sales_layer.tif")
 repub <- raster("data/raster_layers/repub_vote_layer.tif")
 parceldensity <- raster("data/processed/parcel_dens_update.tif") %>% 
@@ -53,7 +52,7 @@ fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc4.1m)
 plot(fuz.sum) 
 
 #make resistance
-econ.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
+econ.scenario <- (1+fuz.sum)^10 + (landval.pnas/4)
 plot(econ.scenario)
 plot(econ.scenario, colNA="red")
 
@@ -82,7 +81,7 @@ fuz.sum <- 1-(rc1.1m*rc2.1m*rc3.1m*rc4.1m)
 plot(fuz.sum) 
 
 #make resistance
-tribal.scenario <- ((1+fuz.sum)^10 + landval.pnas/4)
+tribal.scenario <- (1+fuz.sum)^10 + (landval.pnas/4)
 plot(tribal.scenario)
 writeRaster(tribal.scenario, "data/raster_layers/tribal_scenario.tif", overwrite = TRUE)
 
@@ -138,24 +137,31 @@ des <- bind_rows(wy.desig, mt.desig) %>%
 
 # join them
 join <- bind_rows(des, procs)
-
 # find out where they don't overlap with one of the pa datasets
-diffPoly <- st_difference(join, st_union(procs))
 
-plot(st_geometry(diffPoly))
+int <- st_intersection(des, procs) #get intersection of procs with des
+int.b <- st_buffer(int, 0)
+dif <- st_difference(des, st_union(st_geometry(int.b)), s2_snap_distance(400)) #remove that intersection from des.
+dif.v <- st_make_valid(dif)
+#join back to the procs dataset
+pas <- bind_rows(procs, dif.v)
 
-# join that with the padus dataset -- should now have both pas with no overlap
-join.new <- bind_rows(diffPoly, procs) %>% 
-  st_make_valid(.)
-
+pas <- st_union(pas, by_feature = TRUE) %>%  #clean up geomtries
+  st_transform(.,st_crs(r))
+pas.b <- st_buffer(pas, dist=0)
+pas.b$area <- st_area(pas.b) 
+units(pas.b$area) <- units::make_units(acre)
+pas.b$area <- as.numeric(pas.b$area)
 # filter and buffer
-large.pas <- join.new %>% 
-  filter(., GIS_Acres > 50000) 
+large.pas <- pas.b %>%
+  group_by(., Unit_Nm) %>% 
+  summarize(., totacres = sum(area)) %>% 
+  filter(., totacres > 50000) 
 head(large.pas)
 
-large.pas$ID <- seq(1, nrow(large.pas))
 
-large.pas <- st_crop(large.pas, r)
+large.pas <- st_make_valid(st_crop(large.pas, r))
+large.pas$ID <- seq(1, nrow(large.pas))
 
 
 #bring in habitat suitability and social composite resistance layers
@@ -163,10 +169,9 @@ hab <- raster("data/processed/hsi_resample.tif")
 social <- raster("data/raster_layers/social_resistance_layer.tif")
 
 # extract data
-large.pas$ID <- seq(1, nrow(large.pas))
 
-bio.extract <- raster::extract(hab, large.pas, fun = mean, na.rm = TRUE, df = TRUE)
-social.extract <- raster::extract(social, large.pas, fun = mean, buffer = 5000, na.rm = TRUE, df = TRUE)
+bio.extract <- raster::extract(hab, as(large.pas, "Spatial"), fun = mean, na.rm = TRUE, df = TRUE)
+social.extract <- raster::extract(social, as(large.pas, "Spatial"), fun = mean, buffer = 5000, na.rm = TRUE, df = TRUE)
 
 #join into one df
 join <- left_join(large.pas, bio.extract) %>% 
@@ -174,7 +179,7 @@ join <- left_join(large.pas, bio.extract) %>%
 
 #view and subset for simplification
 head(join)
-df <- subset(join, select = c(Unit_Nm, ID, social_resistance_layer, hsi_resample,  d_Des_Tp, geometry))
+df <- subset(join, select = c(Unit_Nm, ID, social_resistance_layer, hsi_resample,  geometry))
 
 
 # write in case you want to change the selection from the same extract 
@@ -185,35 +190,27 @@ hab.qual<-quantile(df$hsi_resample,probs=c(0.25, 0.5,0.75, .9))
 hab.qual
 
 hab.75 <- df %>% 
-  filter(., hsi_resample > 30.86)
+  filter(., hsi_resample > hab.qual[[3]])
 
 #find the lowest 50% of social composite
 resistance<-quantile(hab.75$social_resistance_layer,probs=c(0,0.25,0.5,0.75, .9))
 resistance
 composite <- hab.75 %>% 
-  filter(., social_resistance_layer < 529 ) %>% 
+  filter(., social_resistance_layer < resistance[[3]] ) %>% 
   st_transform(., st_crs(r))
 
 
-r <- raster("data/template_raster.tif")
-states <- tigris::states()
-mt <- states %>% filter(., NAME=="Montana", drop=TRUE) %>% st_transform(., st_crs(r))
 
 st_write(composite, "data/processed/publand_shortcircuit.shp", append = FALSE)
 
-new.herds <- st_read("data/processed/publand_shortcircuit.shp")
-new.herds$ID <- seq(1, nrow(new.herds))
-
-shortcircuit <- new.herds[new.herds$Unit_Nm %in% c("Grand Teton National Park", "Rocky Mountain Front Conservation Area"),] 
 
 
+shortcircuit <- composite[composite$Unit_Nm %in% c("Nine-Pipe National Wildlife Refuge", "Rocky Mountain Front Conservation Area"),] 
 
-new.herds <- shortcircuit %>% 
-  group_by(ID) %>%
-  summarise(geometry = sf::st_union(geometry)) 
+shortcircuit$ID <- seq(1, nrow(shortcircuit))
 
 
-newherd.rast<-fasterize::fasterize(new.herds, r, field = 'ID')
+newherd.rast<-fasterize::fasterize(shortcircuit, r, field = 'ID')
 plot(newherd.rast)
 writeRaster(newherd.rast, "data/processed/shortcircuit.tif", overwrite= TRUE)
 
