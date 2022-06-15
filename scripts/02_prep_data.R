@@ -4,10 +4,7 @@ library(tidyverse)
 library(sf)
 library(sp)
 library(raster)
-library(dplyr)
 library(rgdal)
-library(ggmap)
-library(usmap)
 library(fasterize)
 
 # Prep data ---------------------------------------------------------------
@@ -76,8 +73,9 @@ rescale01 <- function(r1) {
   r.rescale <- (r1 - cellStats(r1, min))/(cellStats(r1, max) - cellStats(r1, min))
 }
 # bring in hsi and temp raster
-r <- raster("data/template_raster.tif")
-hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
+#TODO: You have combined all of this into one script, so loading these things doesn't make sense (especially because I don't see where you actually save r)
+#r <- raster("data/template_raster.tif")
+#hsi <- raster("data/original/SUMMER_HSI_clip/SUMMER_HSI_clip.tif")
 cattle_sales <- read.csv("data/original/NASS_data/cattle_sales_MTWY.csv")
 #bring in counties to make the NASS data spatial
 counties <- tigris::counties() %>% 
@@ -104,7 +102,7 @@ sales$Value <- as.numeric(sales$Value)
 # park county is 24,112,000 making range plus and minus 2
 sales$rank <- rank(sales$Value)
 park.rank <- sales[sales$County == "PARK" & sales$State == "WYOMING",]$rank
-similar.counties <- sales[which(sales$rank >= (park.rank-2) & sales$rank <= (park.rank+2) & sales$rank != park.rank),]$County
+similar.counties <- sales[which(sales$rank >= (park.rank-2) & sales$rank <= (park.rank+2) & sales$rank != park.rank),]
 
 median <- median(similar.counties$Value)
 
@@ -117,9 +115,9 @@ st_is_valid(cattlesales.spatial) #true
 cattle.sales.sub <- cattlesales.spatial %>% 
   dplyr::select(geometry,Value,County.ANSI,State.ANSI)
 class(cattle.sales.sub)
-#cattlesales <- st_as_sf(cattle.sales.sub)
+cattlesales <- st_as_sf(cattle.sales.sub)
 #make this a raster with temp.raster already loaded
-rstr<<-fasterize::fasterize(cattlesales.spatial, r, field = 'Value')
+rstr <-fasterize::fasterize(cattlesales, r, field = 'Value')
 hist(rstr)
 plot(rstr) 
 
