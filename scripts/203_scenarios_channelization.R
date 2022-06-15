@@ -154,7 +154,7 @@ p1 <- RStoolbox::ggR(hills3) +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
   ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), 
-                           nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+                           box.padding = 1, max.overlaps = Inf,fontface="bold", color = "black", size=4.5)+
   guides(fill = guide_legend(title.position = "top", 
                              label.position="bottom", title = NULL)) +
   theme_map() +
@@ -176,7 +176,7 @@ p2 <- RStoolbox::ggR(hills3) +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
   ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), 
-                           nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+                           box.padding = 1, max.overlaps = Inf,fontface="bold", color = "black", size=4.5)+
   guides(fill = guide_legend(title.position = "top", 
                              label.position="bottom", title = NULL)) +
   theme_map() +
@@ -198,7 +198,7 @@ p3 <- RStoolbox::ggR(hills3) +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
   ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), 
-                           nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+                           box.padding = 1, max.overlaps = Inf,fontface="bold", color = "black", size=4.5)+
   guides(fill = guide_legend(title.position = "top", 
                              label.position="bottom", title = NULL)) +
   theme_map() +
@@ -220,7 +220,7 @@ p4 <- RStoolbox::ggR(hills3) +
   geom_sf(data = PAs, fill = "forestgreen") +
   geom_sf(data = as(sts.crop, "sf"), fill = NA, color="black")+
   ggrepel::geom_text_repel(data = pa.cents, aes(x = st_coordinates(pa.cents)[,1], y = st_coordinates(pa.cents)[,2], label=lab), 
-                           nudge_x = -40000 , nudge_y = c(80000,90000), fontface="bold", color = "white")+
+                           box.padding = 1, max.overlaps = Inf,fontface="bold", color = "black", size=4.5)+
   guides(fill = guide_legend(title.position = "top", 
                              label.position="bottom", title = NULL)) +
   theme_map() +
