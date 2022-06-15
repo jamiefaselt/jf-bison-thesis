@@ -1,13 +1,16 @@
 library(raster)
+library(terra)
 library(tidyverse)
 library(sf)
 library(ggplot2)
+library(ggrepel)
 # template raster
-cattle <- raster("data/raster_layers/cattle_sales_layer.tif")
-r <- raster("data/template_raster.tif") %>% 
-  mask(., cattle)
+r <- raster("data/template_raster.tif") 
+hills3 <- raster("base.tif") 
+hill.proj <- projectRaster(hills3, r)
+hills3 <- terra::resample(hills3, r)
 
-
+values(hills3)[values(hills3) == 250] = NA
 # make the template raster an sf to crop counties to
 r_sf <- stars::st_as_stars(r) %>% 
   st_as_sf(.)
@@ -18,9 +21,13 @@ counties<-st_transform(counties,st_crs(r)) %>%
   st_crop(., r_sf) %>% 
   st_simplify(.)
 st_crs(counties)
-st_write(counties, "data/processed/county_shapefile.shp")
+st_write(counties, "data/processed/county_shapefile_noproj.shp")
 extent(counties)
 
+mtwy <- tigris::states() %>% 
+  dplyr::filter(., STUSPS %in% c("MT", "WY"))
+mtwy<-st_transform(mtwy,st_crs(r)) %>% 
+  st_crop(., r_sf) 
 # Custom map theme --------------------------------------------------------
 theme_map <- function(...) {
   theme_minimal() +
@@ -49,13 +56,13 @@ elev.proj <- projectRaster(elev[[1]], r)
 
 
 elev.crop <- mask(elev.proj, r)
-elev.mod <- elev.crop *10
+elev.mod <- elev.crop[[1]] *10
 slope <- terrain(elev.mod, opt='slope')
 aspect <- terrain(elev.mod, opt='aspect')
 hill = hillShade(slope, aspect, 40, 270)
 hill2 <- aggregate(hill , fact = 5 , method = "bilinear" )
 hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
-writeRaster(hills3, "data/processed/hillshade.tif", overwrite = TRUE)
+writeRaster(hills3, "data/processed/hillshade_full.tif", overwrite = TRUE)
 
 # Get vectors for maps ----------------------------------------------------
 mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
@@ -70,10 +77,8 @@ apr$area <- st_area(apr) %>%
   as.numeric(.)
 
 #trying to get this centroid to be in the middle of the three locations that have bison... but don't have the names on the dataframe
-lg.apr <- apr %>% 
-  filter(., area > 20000000)
-lg.apr<-lg.apr[!(lg.apr$Name=="73 Ranch"),]
-apr <- st_combine(lg.apr) %>% 
+
+apr <- st_combine(apr) %>% 
   st_as_sf %>% 
   rename(geometry = x) 
 apr$NAME <-  seq(1, nrow(apr)) 
@@ -90,10 +95,10 @@ yellowstone <- mt_NPS %>%
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
 
-# fuck
+# combine
 herds <- bind_rows(mt_reservations, apr, yellowstone) 
 plot(st_geometry(herds))
-st_write(herds, "data/processed/herd_shapefile.shp")
+#st_write(herds, "data/processed/herd_shapefile.shp")
 
 
 sts <- tigris::states() %>% 
@@ -108,7 +113,7 @@ conus <-  tigris::states() %>%
 sts.crop <- crop(sts, r)
 
 # just the centroids
-pa.cents <- st_read("data/processed/all_nodes_correct.shp") %>% 
+pa.cents <- st_read("data/processed/older/all_nodes_correct.shp") %>% 
   as(., "sf") %>% 
   st_centroid(.)
 pa.cents[is.na(pa.cents)] = "American Prairie Reserve"
@@ -122,31 +127,46 @@ pa.cents <- pa.cents  %>%
   cbind(pa.cents, st_coordinates(pa.cents))
 
 # want to get a point for Helina, Missoula and Bozeman?
-cities <- st_read("data/original/MontanaIncorporatedCitiesTowns_shp/MontanaIncorporatedCitiesTowns.shp") %>% 
-  st_transform(.,st_crs(r)) %>% 
-  st_make_valid(.)%>% 
-  filter(., grepl('Helena',  NAME)) %>% 
-  subset(., NAME!='East Helena') %>% 
-  st_centroid(.) %>% 
-  st_buffer(., 10000) 
+cities <- tigris::urban_areas() %>% 
+  st_transform(., st_crs(r)) %>% 
+  st_crop(., r_sf)
 
-helena <- cities %>% 
+cities.cut <- cities[cities$NAME10 %in% c("Bozeman, MT", 
+                                          "Cody, WY", 
+                                          "Billings, MT",
+                                          "Helena, MT",
+                                          "Missoula, MT",
+                                          "Sheridan, WY",
+                                          "Great Falls, MT"
+                                          ),] 
+
+cities.cent <- cities.cut %>% 
   st_centroid(.)%>% 
   cbind(., st_coordinates(.))
 
 # make the map
 p <- RStoolbox::ggR(hills3, alpha = .7) + 
   geom_sf(data = counties, fill = NA) +
+  geom_sf(data = mtwy, fill = NA, color = "black", size = .7) +
   geom_sf(data = yellowstone, fill = "forestgreen") +
-  geom_sf(data = apr, fill = "yellow", color = "yellow") + 
-  geom_sf(data = mt_reservations, fill = "orange") + 
+  geom_sf(data = apr, fill = "forestgreen") + 
+  geom_sf(data = mt_reservations, fill = "forestgreen") + 
   geom_sf(data = pa.cents, fill  = NA) + 
-  geom_sf(data = cities, fill = "red", shape ="star") + 
+  geom_sf(data = cities.cent, fill = "red", color = "red") + 
   theme_map() + 
   theme(panel.background = element_rect(fill = "white", color = "black"),
         plot.background = element_rect(fill = NA, color = NA))
 p
-p1 <- p + geom_label_repel(data = pa.cents, aes(X, Y, label = lab), color = "black", fontface="bold", size = 3) + geom_label_repel(data = helena, aes(X, Y, label = NAME), color = "black", size = 2)
+p1 <- p + 
+  geom_label_repel(data = pa.cents, 
+                   aes(X, Y, label = lab), 
+                   color = "black", 
+                   fontface="bold", 
+                   size = 4) + 
+  geom_label_repel(data = cities.cent, 
+                   aes(X, Y, label = NAME10),
+                   color = "black", 
+                   size = 3)
 
 p1
 p3 <- ggplot()+
