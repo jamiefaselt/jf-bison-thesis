@@ -161,7 +161,7 @@ sts.crop <- crop(sts, biophys.cs)
 pa.cents <- as(goals.proj, "sf")
 pa.cents$lab <- c("Blackfeet", "Rocky Boy's", "Fort Belknap",
                   "Fort Peck","Northern Cheyenne","Crow",
-                  "Flathead","American Prairie Reserve",
+                  "Flathead","American Prairie",
                   "Yellowstone")
 
 
@@ -230,11 +230,12 @@ p2 <- legend.5 %>%
   theme_void() +
   theme(
     axis.title = element_text(
-      size = 8,
+      size = 25,
     ),
     axis.title.y = element_text(angle = 90),
     plot.background = element_rect(fill="white", color = "black")) +
   coord_fixed()
+ggsave(here::here("plots/bivmap_legend.png"), plot =p2)
 
 p3 <- ggplot()+
   geom_sf(data=conus, fill="white") +
