@@ -6,11 +6,7 @@ library(ggplot2)
 library(ggrepel)
 # template raster
 r <- raster("data/template_raster.tif") 
-hills3 <- raster("base.tif") 
-hill.proj <- projectRaster(hills3, r)
-hills3 <- terra::resample(hills3, r)
 
-values(hills3)[values(hills3) == 250] = NA
 # make the template raster an sf to crop counties to
 r_sf <- stars::st_as_stars(r) %>% 
   st_as_sf(.)
@@ -21,8 +17,6 @@ counties<-st_transform(counties,st_crs(r)) %>%
   st_crop(., r_sf) %>% 
   st_simplify(.)
 st_crs(counties)
-st_write(counties, "data/processed/county_shapefile_noproj.shp")
-extent(counties)
 
 mtwy <- tigris::states() %>% 
   dplyr::filter(., STUSPS %in% c("MT", "WY"))
@@ -33,7 +27,7 @@ theme_map <- function(...) {
   theme_minimal() +
     theme(
       #text = element_text(family = "Ubuntu Regular", color = "#22211d"),
-      axis.line = element_line(color = "black", size=0.02),
+      axis.line = element_blank(),
       axis.text.x = element_blank(),
       axis.text.y = element_blank(),
       axis.ticks = element_blank(),
@@ -54,7 +48,6 @@ theme_map <- function(...) {
 elev <- getData('alt', country = 'USA')
 elev.proj <- projectRaster(elev[[1]], r)
 
-
 elev.crop <- mask(elev.proj, r)
 elev.mod <- elev.crop[[1]] *10
 slope <- terrain(elev.mod, opt='slope')
@@ -62,8 +55,8 @@ aspect <- terrain(elev.mod, opt='aspect')
 hill = hillShade(slope, aspect, 40, 270)
 hill2 <- aggregate(hill , fact = 5 , method = "bilinear" )
 hills3 <- focal(hill2, w=matrix(1/9, nc=3, nr=3), mean)
-writeRaster(hills3, "data/processed/hillshade_full.tif", overwrite = TRUE)
-
+writeRaster(hills3, "data/processed/hillshade_studarea.tif", overwrite = TRUE)
+hills3 <- raster("data/processed/hillshade_studarea.tif")
 # Get vectors for maps ----------------------------------------------------
 mt_reservations <- st_read("data/original/mt_reservations/MontanaReservations.shp") %>% 
   st_transform(.,st_crs(r)) %>% 
@@ -82,7 +75,7 @@ apr <- st_combine(apr) %>%
   st_as_sf %>% 
   rename(geometry = x) 
 apr$NAME <-  seq(1, nrow(apr)) 
-apr[apr$NAME==1, "NAME"] <- "American Prairie Reserve"
+apr[apr$NAME==1, "NAME"] <- "American Prairie"
 plot(st_geometry(apr))
 
 
@@ -94,6 +87,12 @@ yellowstone <- mt_NPS %>%
   filter(., grepl('Yellowstone National Park',  UNIT_NAME))
 yellowstone <- subset(yellowstone, select=c(geometry, UNIT_NAME)) %>%
   rename(NAME = UNIT_NAME)
+
+#short circuit
+newpa <- st_read("data/processed/publand_shortcircuit.shp")%>% 
+  st_transform(.,st_crs(r)) %>% 
+  st_make_valid()
+
 
 # combine
 herds <- bind_rows(mt_reservations, apr, yellowstone) 
@@ -116,8 +115,8 @@ sts.crop <- crop(sts, r)
 pa.cents <- st_read("data/processed/older/all_nodes_correct.shp") %>% 
   as(., "sf") %>% 
   st_centroid(.)
-pa.cents[is.na(pa.cents)] = "American Prairie Reserve"
-pa.cents$lab <- c("Blackfeet", "Rocky Boy's" , "Fort Belknap", "Fort Peck", "Northern Cheyenne", "Crow", "Flathead", "American Prairie Reserve", "Yellowstone")
+pa.cents[is.na(pa.cents)] = "American Prairie"
+pa.cents$lab <- c("Blackfeet", "Rocky Boy's" , "Fort Belknap", "Fort Peck", "Northern Cheyenne", "Crow", "Flathead", "American Prairie", "Yellowstone")
 
 pa.cents <- pa.cents
 
@@ -145,8 +144,8 @@ cities.cent <- cities.cut %>%
   cbind(., st_coordinates(.))
 
 # make the map
-p <- RStoolbox::ggR(hills3, alpha = .7) + 
-  geom_sf(data = counties, fill = NA) +
+p <- RStoolbox::ggR(hills3, alpha = .4) + 
+  geom_sf(data = counties, fill = NA, color = "white") +
   geom_sf(data = mtwy, fill = NA, color = "black", size = .7) +
   geom_sf(data = yellowstone, fill = "forestgreen") +
   geom_sf(data = apr, fill = "forestgreen") + 
@@ -154,19 +153,21 @@ p <- RStoolbox::ggR(hills3, alpha = .7) +
   geom_sf(data = pa.cents, fill  = NA) + 
   geom_sf(data = cities.cent, fill = "red", color = "red") + 
   theme_map() + 
-  theme(panel.background = element_rect(fill = "white", color = "black"),
-        plot.background = element_rect(fill = NA, color = NA))
+  theme(panel.background = element_rect(fill = "white", color = "white"),
+        plot.background = element_rect(fill = NA, color = NA))+
+  north(mtwy) +
+  annotation_scale(location = "br")
 p
 p1 <- p + 
-  geom_label_repel(data = pa.cents, 
+  geom_text_repel(data = pa.cents, 
                    aes(X, Y, label = lab), 
                    color = "black", 
                    fontface="bold", 
-                   size = 4) + 
-  geom_label_repel(data = cities.cent, 
+                   size = 6) + 
+  geom_text_repel(data = cities.cent, 
                    aes(X, Y, label = NAME10),
                    color = "black", 
-                   size = 3)
+                   size = 5)
 
 p1
 p3 <- ggplot()+
@@ -178,8 +179,8 @@ p3 <- ggplot()+
 
 library(cowplot)
 full <- ggdraw(p1)  +
-  draw_plot(p3, x = 0.72, y = 0,  
+  draw_plot(p3, x = 0.0, y = 0,  
             width = 0.3, height = 0.2)
 
-ggsave(here::here("plots/study_area.png"), plot =full)
+ggsave(here::here("plots/study_area_redo.png"), plot =full)
 
